@@ -1,0 +1,1869 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SmartFleet — Centro de Control de Labores y Tipos de Equipo</title>
+  
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-darkest: #070a12;
+      --bg-main: #0c111d;
+      --bg-surface: #121826;
+      --bg-surface-elevated: #182236;
+      --bg-card: rgba(23, 32, 51, 0.88);
+      --bg-card-hover: rgba(33, 46, 73, 0.98);
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-focus: rgba(59, 130, 246, 0.5);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      
+      --color-disp: #10b981;
+      --color-nodisp: #ef4444;
+      --color-primary: #3b82f6;
+
+      --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.35);
+      --shadow-md: 0 8px 20px -4px rgba(0, 0, 0, 0.5);
+      --shadow-lg: 0 16px 36px -6px rgba(0, 0, 0, 0.7);
+      
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body, html {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: var(--bg-darkest);
+      color: var(--text-main);
+    }
+
+    #app-container {
+      display: flex;
+      flex-direction: column;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ==========================================================================
+       HEADER & KPI TOOLBAR
+       ========================================================================== */
+    header#app-header {
+      background: rgba(12, 17, 29, 0.94);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 10px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 100;
+      flex-shrink: 0;
+    }
+
+    .header-top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .brand-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-logo-icon {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, #10b981, #06b6d4);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
+    }
+
+    .brand-text h1 {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-text h1 span.badge-pro {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 2px 7px;
+      background: rgba(59, 130, 246, 0.2);
+      color: #60a5fa;
+      border: 1px solid rgba(59, 130, 246, 0.4);
+      border-radius: 999px;
+      font-weight: 700;
+    }
+
+    .brand-text p {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    /* KPI Cards */
+    .kpi-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .kpi-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 5px 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      transition: all 0.2s ease;
+    }
+
+    .kpi-card:hover {
+      border-color: rgba(255, 255, 255, 0.18);
+      transform: translateY(-1px);
+    }
+
+    .kpi-icon {
+      font-size: 15px;
+    }
+
+    .kpi-info {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .kpi-label {
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-dim);
+      font-weight: 600;
+    }
+
+    .kpi-value {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .kpi-value.text-success { color: #34d399; }
+    .kpi-value.text-danger { color: #f87171; }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-action {
+      background: var(--bg-surface);
+      color: var(--text-main);
+      border: 1px solid var(--border-subtle);
+      padding: 6px 11px;
+      border-radius: var(--radius-sm);
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.2s;
+    }
+
+    .btn-action:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .btn-action.btn-sync {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border-color: rgba(16, 185, 129, 0.35);
+    }
+
+    .btn-action.btn-sync:hover {
+      background: rgba(16, 185, 129, 0.25);
+    }
+
+    /* Filters Row */
+    .header-filter-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+      padding-top: 4px;
+      border-top: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    .filter-left-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .search-box {
+      position: relative;
+      width: 220px;
+    }
+
+    .search-box input {
+      width: 100%;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 6px 10px 6px 28px;
+      font-size: 12px;
+      color: #ffffff;
+      outline: none;
+      transition: all 0.2s;
+    }
+
+    .search-box input:focus {
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+    }
+
+    .search-box .search-icon {
+      position: absolute;
+      left: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 13px;
+      color: var(--text-dim);
+      pointer-events: none;
+    }
+
+    .filter-pills-group {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+
+    .filter-group-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      font-weight: 700;
+      color: var(--text-dim);
+      letter-spacing: 0.05em;
+      margin-right: 2px;
+    }
+
+    .filter-pill {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      padding: 4px 9px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.15s ease;
+    }
+
+    .filter-pill:hover {
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .filter-pill.active {
+      background: #3b82f6;
+      color: #ffffff;
+      border-color: #3b82f6;
+      box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+    }
+
+    .filter-pill span.count {
+      opacity: 0.75;
+      font-weight: 500;
+      font-size: 10px;
+    }
+
+    /* ==========================================================================
+       BOARD & KANBAN COLUMNS
+       ========================================================================== */
+    main#board-container {
+      flex: 1;
+      overflow-x: auto;
+      overflow-y: hidden;
+      padding: 14px 18px 18px 18px;
+      display: flex;
+      gap: 16px;
+      align-items: stretch;
+    }
+
+    /* Custom Scrollbar */
+    main#board-container::-webkit-scrollbar {
+      height: 9px;
+    }
+    main#board-container::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.25);
+    }
+    main#board-container::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.16);
+      border-radius: 5px;
+    }
+    main#board-container::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    .labor-column {
+      width: 325px;
+      min-width: 325px;
+      background: #111827;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: var(--radius-lg);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+      transition: border-color 0.2s, box-shadow 0.2s;
+      position: relative;
+    }
+
+    .labor-column.drag-target {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.4), 0 8px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    .column-accent-line {
+      height: 3px;
+      width: 100%;
+      flex-shrink: 0;
+    }
+
+    .column-header {
+      padding: 12px 14px 10px 14px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.005) 100%);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: blur(8px);
+    }
+
+    .column-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .column-title-left {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+
+    .labor-icon-badge {
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+
+    .labor-name {
+      font-size: 14px;
+      font-weight: 700;
+      color: #f8fafc;
+      letter-spacing: -0.01em;
+    }
+
+    .column-count-chip {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-variant-numeric: tabular-nums;
+      transition: all 0.2s ease;
+      border: 1px solid transparent;
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .column-count-chip.zero {
+      color: var(--text-dim);
+      background: rgba(255, 255, 255, 0.04);
+      border-color: rgba(255, 255, 255, 0.04);
+    }
+
+    /* Health progress bar */
+    .column-health-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 10.5px;
+      min-height: 16px;
+    }
+
+    .health-meter-wrap {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .health-track {
+      flex: 1;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 999px;
+      overflow: hidden;
+      display: flex;
+    }
+
+    .health-fill-disp {
+      height: 100%;
+      background: #10b981;
+      border-radius: 999px;
+      transition: width 0.3s ease;
+    }
+
+    .health-fill-nodisp {
+      height: 100%;
+      background: #ef4444;
+      transition: width 0.3s ease;
+    }
+
+    .health-stats-text {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text-muted);
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .health-empty-label {
+      font-size: 10.5px;
+      font-weight: 500;
+      color: var(--text-dim);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* Dropzone area */
+    .cards-dropzone {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-height: 150px;
+    }
+
+    .cards-dropzone::-webkit-scrollbar {
+      width: 6px;
+    }
+    .cards-dropzone::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.12);
+      border-radius: 3px;
+    }
+
+    /* ==========================================================================
+       SUBGROUP BY TIPO DE EQUIPO
+       ========================================================================== */
+    .type-subgroup {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      background: rgba(0, 0, 0, 0.18);
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      padding: 8px;
+    }
+
+    .type-subgroup-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 2px 4px 6px 4px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .type-subgroup-header:hover .type-title span.type-name {
+      color: #60a5fa;
+    }
+
+    .type-title {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .type-icon {
+      font-size: 13px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* SVG equipment icons */
+    .eq-icon {
+      width: 14px;
+      height: 14px;
+      display: inline-block;
+      vertical-align: -2px;
+      stroke: currentColor;
+      fill: none;
+      flex-shrink: 0;
+    }
+    .type-icon .eq-icon {
+      width: 15px;
+      height: 15px;
+      vertical-align: -2px;
+    }
+    .card-specs .eq-icon {
+      width: 13px;
+      height: 13px;
+      vertical-align: -2px;
+      margin-right: 3px;
+    }
+    .filter-pill .eq-icon {
+      width: 14px;
+      height: 14px;
+      vertical-align: -2px;
+      margin-right: 4px;
+    }
+    .modal-spec-value .eq-icon {
+      width: 15px;
+      height: 15px;
+      vertical-align: -2px;
+      margin-right: 4px;
+    }
+
+    .type-name {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-muted);
+      transition: color 0.15s;
+    }
+
+    .type-meta {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .type-count-badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-dim);
+    }
+
+    .type-chevron {
+      font-size: 10px;
+      color: var(--text-dim);
+      transition: transform 0.2s ease;
+    }
+
+    .type-subgroup.collapsed .type-chevron {
+      transform: rotate(-90deg);
+    }
+
+    .type-subgroup.collapsed .type-cards-list {
+      display: none;
+    }
+
+    .type-cards-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    /* ==========================================================================
+       EQUIPMENT CARDS
+       ========================================================================== */
+    .equipment-card {
+      background: linear-gradient(145deg, rgba(255, 255, 255, 0.035) 0%, rgba(255, 255, 255, 0.01) 100%), #141c2b;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: var(--radius-sm);
+      padding: 9px 11px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      cursor: grab;
+      user-select: none;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+    }
+
+    .equipment-card:hover {
+      background: linear-gradient(145deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.02) 100%), #172235;
+      border-color: rgba(255, 255, 255, 0.22);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+    }
+
+    .equipment-card:active {
+      cursor: grabbing;
+    }
+
+    .equipment-card.is-dragging {
+      opacity: 0.45;
+      transform: scale(0.96) rotate(2deg);
+      border-color: #3b82f6;
+    }
+
+    .card-top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .card-code-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* LED Pulse */
+    .status-led {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .status-led.led-online {
+      background: #10b981;
+      box-shadow: 0 0 7px rgba(16, 185, 129, 0.7);
+    }
+
+    .status-led.led-offline {
+      background: #ef4444;
+      box-shadow: 0 0 7px rgba(239, 68, 68, 0.7);
+      animation: pulse-warn 1.8s infinite;
+    }
+
+    @keyframes pulse-warn {
+      0% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(1.2); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    .card-code {
+      font-size: 13px;
+      font-weight: 700;
+      color: #ffffff;
+      letter-spacing: -0.01em;
+    }
+
+    .card-badges-right {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .badge-finca {
+      font-size: 9px;
+      font-weight: 600;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.07);
+      color: var(--text-muted);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      white-space: nowrap;
+    }
+
+    .card-model-row {
+      font-size: 11px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .card-specs {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 180px;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .card-horometro {
+      font-size: 10px;
+      color: var(--text-dim);
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .card-footer-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      padding-top: 6px;
+      margin-top: 2px;
+    }
+
+    .status-tag {
+      font-size: 9.5px;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      letter-spacing: 0.02em;
+    }
+
+    .status-tag.tag-disp {
+      background: rgba(16, 185, 129, 0.12);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.25);
+    }
+
+    .status-tag.tag-nodisp {
+      background: rgba(239, 68, 68, 0.14);
+      color: #f87171;
+      border: 1px solid rgba(239, 68, 68, 0.25);
+    }
+
+    .btn-card-menu {
+      background: transparent;
+      border: none;
+      color: var(--text-dim);
+      font-size: 12px;
+      padding: 2px 6px;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: all 0.15s;
+    }
+
+    .btn-card-menu:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: #ffffff;
+    }
+
+    /* Modern Empty State */
+    .empty-dropzone {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 30px 14px;
+      border: 1.5px dashed rgba(255, 255, 255, 0.08);
+      border-radius: var(--radius-md);
+      background: rgba(255, 255, 255, 0.015);
+      margin: 4px 0;
+      text-align: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+      cursor: default;
+    }
+
+    .labor-column.drag-target .empty-dropzone {
+      border-color: #3b82f6;
+      background: rgba(59, 130, 246, 0.08);
+      border-style: solid;
+    }
+
+    .empty-dropzone-icon {
+      font-size: 22px;
+      opacity: 0.55;
+      margin-bottom: 2px;
+      line-height: 1;
+    }
+
+    .empty-dropzone-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: #94a3b8;
+    }
+
+    .empty-dropzone-desc {
+      font-size: 10.5px;
+      color: #64748b;
+      max-width: 200px;
+      line-height: 1.35;
+    }
+
+    /* ==========================================================================
+       MODALS
+       ========================================================================== */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(6px);
+      z-index: 999;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+      animation: fadeIn 0.2s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.98); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .modal-dialog {
+      background: var(--bg-surface);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: var(--radius-lg);
+      width: 100%;
+      max-width: 480px;
+      box-shadow: var(--shadow-lg);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .modal-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .modal-header h3 {
+      font-size: 15px;
+      font-weight: 700;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .modal-close {
+      background: transparent;
+      border: none;
+      font-size: 20px;
+      color: var(--text-dim);
+      cursor: pointer;
+      line-height: 1;
+      padding: 4px;
+      border-radius: 4px;
+      transition: color 0.15s;
+    }
+
+    .modal-close:hover {
+      color: #ffffff;
+    }
+
+    .modal-body {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      font-size: 13px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .form-group label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+    }
+
+    .form-group select, .form-group input {
+      background: var(--bg-main);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 8px 12px;
+      color: #ffffff;
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .form-group select:focus, .form-group input:focus {
+      border-color: var(--color-primary);
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      background: rgba(0, 0, 0, 0.25);
+      padding: 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-subtle);
+    }
+
+    .info-item {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .info-item span.label {
+      font-size: 9px;
+      color: var(--text-dim);
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .info-item span.val {
+      font-size: 12px;
+      font-weight: 600;
+      color: #ffffff;
+    }
+
+    .modal-footer {
+      padding: 12px 20px;
+      background: rgba(0, 0, 0, 0.2);
+      border-top: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .btn-link-airtable {
+      font-size: 12px;
+      color: #60a5fa;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-weight: 600;
+    }
+
+    .btn-link-airtable:hover {
+      text-decoration: underline;
+    }
+
+    .btn-save {
+      background: #3b82f6;
+      color: #ffffff;
+      border: none;
+      padding: 7px 15px;
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .btn-save:hover {
+      background: #2563eb;
+    }
+
+    /* ==========================================================================
+       TOAST NOTIFICATIONS
+       ========================================================================== */
+    #toast-container {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 1000;
+      pointer-events: none;
+    }
+
+    .toast {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 10px 16px;
+      color: #ffffff;
+      font-size: 13px;
+      font-weight: 600;
+      box-shadow: var(--shadow-lg);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      pointer-events: auto;
+      animation: slideInRight 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      max-width: 380px;
+    }
+
+    @keyframes slideInRight {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    .toast.toast-success {
+      border-left: 4px solid #10b981;
+    }
+
+    .toast.toast-error {
+      border-left: 4px solid #ef4444;
+    }
+  </style>
+</head>
+<body>
+  <div id="app-container">
+
+    <!-- Top App Header & KPIs -->
+    <header id="app-header">
+      <div class="header-top-row">
+        <div class="brand-title">
+          <div class="brand-logo-icon">🚜</div>
+          <div class="brand-text">
+            <h1>SmartFleet · Labores y Tipos de Equipo <span class="badge-pro">Control en Vivo</span></h1>
+            <p>AgroIndustrial Tres Amigos S.A. — Distribución Operativa Jerárquica</p>
+          </div>
+        </div>
+
+        <!-- Global Fleet KPI Badges -->
+        <div class="kpi-group">
+          <div class="kpi-card" title="Total de maquinaria registrada">
+            <span class="kpi-icon">🚜</span>
+            <div class="kpi-info">
+              <span class="kpi-label">Flota Total</span>
+              <span class="kpi-value" id="kpi-total-fleet">222</span>
+            </div>
+          </div>
+
+          <div class="kpi-card" title="% de equipos operativos sin orden de trabajo abierta">
+            <span class="kpi-icon">⚡</span>
+            <div class="kpi-info">
+              <span class="kpi-label">Disponibilidad</span>
+              <span class="kpi-value text-success" id="kpi-disp-rate">94.1%</span>
+            </div>
+          </div>
+
+          <div class="kpi-card" title="Equipos listos para trabajar">
+            <span class="kpi-icon">🟢</span>
+            <div class="kpi-info">
+              <span class="kpi-label">En Campo</span>
+              <span class="kpi-value text-success" id="kpi-active-count">209</span>
+            </div>
+          </div>
+
+          <div class="kpi-card" title="Equipos con orden de trabajo o en taller">
+            <span class="kpi-icon">🔴</span>
+            <div class="kpi-info">
+              <span class="kpi-label">En Taller</span>
+              <span class="kpi-value text-danger" id="kpi-maintenance-count">13</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="header-actions">
+          <button class="btn-action" id="btn-toggle-subgroups" onclick="toggleAllSubgroups()" title="Colapsar o expandir todos los tipos de equipo">
+            📁 Colapsar Tipos
+          </button>
+          <button class="btn-action btn-sync" id="btn-open-sync" title="Configurar conexión con Airtable o n8n">
+            ⚙️ Sincronización
+          </button>
+          <button class="btn-action" id="btn-refresh" title="Recargar estado">
+            🔄 Refrescar
+          </button>
+        </div>
+      </div>
+
+      <!-- Filter Controls Row -->
+      <div class="header-filter-row">
+        <div class="filter-left-group">
+          <!-- Search Box -->
+          <div class="search-box">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="search-input" placeholder="Buscar código o modelo..." />
+          </div>
+
+          <!-- Fincas Filter Pills -->
+          <div class="filter-pills-group" id="fincas-filter-container">
+            <span class="filter-group-label">Finca:</span>
+            <button class="filter-pill active" data-finca="ALL">
+              Todas <span class="count" id="cnt-finca-all">222</span>
+            </button>
+            <button class="filter-pill" data-finca="recw5LT8E71L2iXWL">
+              Santa Rosa <span class="count" id="cnt-finca-sr">114</span>
+            </button>
+            <button class="filter-pill" data-finca="recgsy0odqXWTcNPY">
+              Rio Cuarto <span class="count" id="cnt-finca-rc">42</span>
+            </button>
+            <button class="filter-pill" data-finca="recQHY85mAvvcf1kD">
+              El Parque <span class="count" id="cnt-finca-ep">38</span>
+            </button>
+            <button class="filter-pill" data-finca="recaiF7SVqHCWnfQR">
+              Piedra Alegre <span class="count" id="cnt-finca-pa">28</span>
+            </button>
+          </div>
+
+          <!-- Equipment Type Quick Filter -->
+          <div class="filter-pills-group" id="type-filter-container">
+            <span class="filter-group-label">Tipo:</span>
+            <button class="filter-pill active" data-type="ALL">Todos</button>
+            <button class="filter-pill" data-type="Tractor Agricola">🚜 Tractores</button>
+            <button class="filter-pill" data-type="Camión">🚛 Camiones</button>
+            <button class="filter-pill" data-type="PickUp">🛻 PickUps</button>
+            <button class="filter-pill" data-type="Mini Excavadora"><svg class="eq-icon svg-excavator" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="16" width="11" height="5" rx="2.5"/><circle cx="4.5" cy="18.5" r="0.8" fill="currentColor"/><circle cx="7.5" cy="18.5" r="0.8" fill="currentColor"/><circle cx="10.5" cy="18.5" r="0.8" fill="currentColor"/><path d="M3 16V9.5a1 1 0 0 1 1-1h4l3 3.5V16"/><path d="M5.5 10.5h2v2.5h-2z" stroke-width="1.2"/><path d="M10 12l5-8.5" stroke-width="2.2"/><path d="M15 3.5l4.5 7" stroke-width="2.2"/><path d="M19.5 10.5c.8 2.2-1.2 4-3.5 3.2l1-4z" fill="currentColor" fill-opacity="0.25" stroke-width="1.5"/></svg>Excavadoras</button>
+            <button class="filter-pill" data-type="Montacarga"><svg class="eq-icon svg-forklift" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="18" r="2.2"/><circle cx="15" cy="18" r="2.2"/><path d="M8.2 18h4.6"/><path d="M3 15v1a2.2 2.2 0 0 0 2.2 2.2h.6"/><path d="M3 14h13.5"/><path d="M5 14V7.5a1 1 0 0 1 1-1h5.5l2.5 4.5v3"/><line x1="5" y1="6.5" x2="11.5" y2="6.5" stroke-width="2"/><circle cx="7.5" cy="10" r="0.8" fill="currentColor"/><line x1="18" y1="3" x2="18" y2="19" stroke-width="2.2"/><path d="M18 13.5h2v5h3.5" stroke-width="2"/></svg>Montacargas</button>
+            <button class="filter-pill" data-type="Motocicleta">🏍️ Motos</button>
+          </div>
+        </div>
+
+        <!-- Availability Filter Pills -->
+        <div class="filter-pills-group" id="disp-filter-container">
+          <button class="filter-pill active" data-disp="ALL">Todos</button>
+          <button class="filter-pill" data-disp="Disponible">🟢 Disponibles</button>
+          <button class="filter-pill" data-disp="No Disponible">🔴 En Taller</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Kanban Board Container -->
+    <main id="board-container">
+      <!-- Generated dynamically via JS -->
+    </main>
+
+  </div>
+
+  <!-- Detail / Edit Modal -->
+  <div id="equipment-modal" class="modal-overlay">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3><span id="modal-led" class="status-led led-online"></span> <span id="modal-code">T-402</span></h3>
+        <button class="modal-close" id="btn-close-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="info-grid">
+          <div class="info-item">
+            <span class="label">Tipo de Equipo</span>
+            <span class="val" id="modal-type">Tractor Agrícola</span>
+          </div>
+          <div class="info-item">
+            <span class="label">Marca & Modelo</span>
+            <span class="val" id="modal-brand-model">Case Maxxum 125</span>
+          </div>
+          <div class="info-item">
+            <span class="label">Disponibilidad</span>
+            <span class="val" id="modal-disp-status">Disponible</span>
+          </div>
+          <div class="info-item">
+            <span class="label">Finca Actual</span>
+            <span class="val" id="modal-finca">Rio Cuarto</span>
+          </div>
+          <div class="info-item">
+            <span class="label">Horómetro Actual</span>
+            <span class="val" id="modal-horometro">3,330.4 h</span>
+          </div>
+          <div class="info-item">
+            <span class="label">Labor Actual</span>
+            <span class="val" id="modal-labor-current">Cosecha</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="modal-labor-select">Reasignar a Labor Agrícola:</label>
+          <select id="modal-labor-select">
+            <!-- Populated via JS -->
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="modal-finca-select">Traslado / Finca:</label>
+          <select id="modal-finca-select">
+            <!-- Populated via JS -->
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <a href="#" target="_blank" id="modal-airtable-link" class="btn-link-airtable">
+          Abrir en Airtable ↗
+        </a>
+        <button class="btn-save" id="btn-save-reassignment">Guardar Cambios</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sync Settings Modal -->
+  <div id="sync-modal" class="modal-overlay">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3>⚙️ Configuración de Sincronización</h3>
+        <button class="modal-close" id="btn-close-sync">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 12px; color: var(--text-muted); line-height: 1.5;">
+          El tablero puede persistir las reasignaciones directamente a Airtable mediante API REST o a través de un webhook seguro de n8n.
+        </p>
+
+        <div class="form-group">
+          <label for="sync-mode-select">Método de Sincronización:</label>
+          <select id="sync-mode-select">
+            <option value="offline">🔵 Modo Autónomo / Simulación (Offline)</option>
+            <option value="n8n">🟣 Webhook n8n (Recomendado)</option>
+            <option value="airtable">🟢 API Directa Airtable (PAT)</option>
+          </select>
+        </div>
+
+        <div class="form-group" id="grp-webhook" style="display: none;">
+          <label for="webhook-url-input">URL de Webhook n8n:</label>
+          <input type="text" id="webhook-url-input" placeholder="https://gus-n8n.../webhook/cambiar-labor" />
+        </div>
+
+        <div class="form-group" id="grp-token" style="display: none;">
+          <label for="pat-input">Airtable Personal Access Token (PAT):</label>
+          <input type="password" id="pat-input" placeholder="pat..." />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <div></div>
+        <button class="btn-save" id="btn-save-sync">Guardar Preferencia</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toast-container"></div>
+
+  <!-- Embedded Live Data -->
+  <script>
+    const INITIAL_DATA = {"updatedAt":"2026-10-04T16:28:22.756Z","fincas":[{"id":"recQHY85mAvvcf1kD","nombre":"El Parque"},{"id":"recaiF7SVqHCWnfQR","nombre":"Piedra Alegre"},{"id":"recgsy0odqXWTcNPY","nombre":"Rio Cuarto"},{"id":"recw5LT8E71L2iXWL","nombre":"Santa Rosa"}],"labores":[{"id":"recvrSE86WZmgBXZl","nombre":"Cosecha","icon":"🌾","color":"#eab308"},{"id":"recrihBeLsL5mFplL","nombre":"Preparación","icon":"🚜","color":"#f97316"},{"id":"recI35SPIrUynpSYm","nombre":"Aplicaciones","icon":"🧪","color":"#3b82f6"},{"id":"recMH3MK24nQpHnSL","nombre":"Transporte","icon":"🚛","color":"#06b6d4"},{"id":"recnhBNyQvnrKFHuy","nombre":"Semilla","icon":"🌱","color":"#10b981"},{"id":"recqtPRXXIpsjRNh2","nombre":"Tanquetero","icon":"⛽","color":"#8b5cf6"},{"id":"rechuILWIfByvwJaE","nombre":"Taller","icon":"🔧","color":"#ef4444"},{"id":"rec9vnSFdFXTLRMwB","nombre":"Bodega","icon":"📦","color":"#64748b"}],"equipos":[{"id":"rec0KsWIpNuh0cF6U","codigo":"EX-402","tipo":"Mini Excavadora","marca":"Caterpillar","modelo":"305","fincaId":"recQHY85mAvvcf1kD","fincaNombre":"El Parque","laborId":"recrihBeLsL5mFplL","laborNombre":"Preparación","disponibilidad":"Disponible","horometro":5225.3,"otAbierta":false,"medidor":"horas"},{"id":"rec0pTx5hDszSF9MK","codigo":"T-217","tipo":"Tractor Agricola","marca":"Case","modelo":"MAXXUM 110","fincaId":"recQHY85mAvvcf1kD","fincaNombre":"El Parque","laborId":"recqtPRXXIpsjRNh2","laborNombre":"Tanquetero","disponibilidad":"Disponible","horometro":11232,"otAbierta":false,"medidor":"horas"},{"id":"rec13c8pk1TzWwcnD","codigo":"V-202","tipo":"Camión","marca":"Freightliner","modelo":"KB","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"recMH3MK24nQpHnSL","laborNombre":"Transporte","disponibilidad":"Disponible","horometro":655.5,"otAbierta":false,"medidor":"horas"},{"id":"rec1F0Vomcg2PGL1T","codigo":"MO-205","tipo":"Montacarga","marca":"Case","modelo":"588H","fincaId":"recQHY85mAvvcf1kD","fincaNombre":"El Parque","laborId":"rechuILWIfByvwJaE","laborNombre":"Taller","disponibilidad":"Disponible","horometro":3068.2,"otAbierta":false,"medidor":"horas"},{"id":"rec1VJn7gyO9lnpaI","codigo":"LB-02","tipo":"Carreta","marca":"","modelo":"","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":null,"laborNombre":"Sin Labor","disponibilidad":"Disponible","horometro":null,"otAbierta":false,"medidor":"Kilometraje"},{"id":"rec1dwFI8BgZCouqq","codigo":"TO-402","tipo":"Tractor Oruga","marca":"John Deere","modelo":"850 J","fincaId":"recgsy0odqXWTcNPY","fincaNombre":"Rio Cuarto","laborId":"recrihBeLsL5mFplL","laborNombre":"Preparación","disponibilidad":"Disponible","horometro":4225.4,"otAbierta":true,"medidor":"horas"},{"id":"rec1lj0GdavjhtZbk","codigo":"T-251","tipo":"Tractor Agricola","marca":"Case","modelo":"MAXXUM 125","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"recI35SPIrUynpSYm","laborNombre":"Aplicaciones","disponibilidad":"Disponible","horometro":1355.2,"otAbierta":false,"medidor":"horas"},{"id":"rec2GP72qe9yLZzTc","codigo":"TO-02","tipo":"Tractor Oruga","marca":"Caterpillar","modelo":"D6R","fincaId":"recgsy0odqXWTcNPY","fincaNombre":"Rio Cuarto","laborId":"recrihBeLsL5mFplL","laborNombre":"Preparación","disponibilidad":"Disponible","horometro":27878.1,"otAbierta":false,"medidor":"horas"},{"id":"rec2aUNgt9SDdHVFM","codigo":"T-20","tipo":"Tractor Agricola","marca":"Landini","modelo":"PF 110","fincaId":"recaiF7SVqHCWnfQR","fincaNombre":"Piedra Alegre","laborId":"rechuILWIfByvwJaE","laborNombre":"Taller","disponibilidad":"Disponible","horometro":9421.3,"otAbierta":false,"medidor":"horas"},{"id":"rec2qaWw9jKPq7Hdx","codigo":"T-214","tipo":"Tractor Agricola","marca":"Case","modelo":"MAXXUM 125","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"recrihBeLsL5mFplL","laborNombre":"Preparación","disponibilidad":"Disponible","horometro":14273,"otAbierta":false,"medidor":"horas"},{"id":"rec2xNmV5QQRLoXMI","codigo":"V-17","tipo":"PickUp","marca":"Mitsubishi","modelo":"L200","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"recMH3MK24nQpHnSL","laborNombre":"Transporte","disponibilidad":"Disponible","horometro":200566,"otAbierta":false,"medidor":"Kilometraje"},{"id":"rec3COsPafsCtcTDs","codigo":"EX-07","tipo":"Mini Excavadora","marca":"Case","modelo":"CX57C","fincaId":"recgsy0odqXWTcNPY","fincaNombre":"Rio Cuarto","laborId":"recrihBeLsL5mFplL","laborNombre":"Preparación","disponibilidad":"No Disponible","horometro":9789.6,"otAbierta":false,"medidor":"horas"},{"id":"rec3cASr27iHsi1gn","codigo":"T-221","tipo":"Tractor Agricola","marca":"Case","modelo":"MAXXUM 110","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"recqtPRXXIpsjRNh2","laborNombre":"Tanquetero","disponibilidad":"Disponible","horometro":12048,"otAbierta":false,"medidor":"horas"},{"id":"rec3hzugcWwNqF7sN","codigo":"M-14","tipo":"Motocicleta","marca":"Honda","modelo":"CTX 205","fincaId":"recaiF7SVqHCWnfQR","fincaNombre":"Piedra Alegre","laborId":"recMH3MK24nQpHnSL","laborNombre":"Transporte","disponibilidad":"Disponible","horometro":null,"otAbierta":false,"medidor":"Kilometraje"},{"id":"rec3lQ0BxwRaBQ8D3","codigo":"T-70","tipo":"Tractor Agricola","marca":"Same","modelo":"Explorer 3 115 E","fincaId":"recgsy0odqXWTcNPY","fincaNombre":"Rio Cuarto","laborId":"recrihBeLsL5mFplL","laborNombre":"Preparación","disponibilidad":"Disponible","horometro":1429.1,"otAbierta":false,"medidor":"horas"},{"id":"rec3ncvUmAzyer0Dt","codigo":"T-41","tipo":"Tractor Agricola","marca":"Landini","modelo":"PF 110","fincaId":"recaiF7SVqHCWnfQR","fincaNombre":"Piedra Alegre","laborId":"recvrSE86WZmgBXZl","laborNombre":"Cosecha","disponibilidad":"No Disponible","horometro":4115,"otAbierta":false,"medidor":"horas"},{"id":"rec54RgxqZZeTuoeS","codigo":"T-68","tipo":"Tractor Agricola","marca":"Same","modelo":"Explorer 3 115 E","fincaId":"recaiF7SVqHCWnfQR","fincaNombre":"Piedra Alegre","laborId":"recvrSE86WZmgBXZl","laborNombre":"Cosecha","disponibilidad":"Disponible","horometro":2002.5,"otAbierta":true,"medidor":"horas"},{"id":"rec54WneFZmvTKsrK","codigo":"M-13","tipo":"Motocicleta","marca":"Honda","modelo":"CTX 204","fincaId":"recaiF7SVqHCWnfQR","fincaNombre":"Piedra Alegre","laborId":"recMH3MK24nQpHnSL","laborNombre":"Transporte","disponibilidad":"Disponible","horometro":null,"otAbierta":false,"medidor":"Kilometraje"},{"id":"rec59a9gj9R0JAlgA","codigo":"V-22","tipo":"PickUp","marca":"Toyota","modelo":"Hilux","fincaId":"recaiF7SVqHCWnfQR","fincaNombre":"Piedra Alegre","laborId":"recMH3MK24nQpHnSL","laborNombre":"Transporte","disponibilidad":"Disponible","horometro":76392,"otAbierta":true,"medidor":"Kilometraje"},{"id":"rec5Luq1LGtxDe3IL","codigo":"M-08","tipo":"Motocicleta","marca":"Honda","modelo":"CTX 200","fincaId":"recgsy0odqXWTcNPY","fincaNombre":"Rio Cuarto","laborId":"recMH3MK24nQpHnSL","laborNombre":"Transporte","disponibilidad":"Disponible","horometro":null,"otAbierta":false,"medidor":"Kilometraje"},{"id":"rec5YH4aDrwGpmxZC","codigo":"T-64","tipo":"Tractor Agricola","marca":"John Deere","modelo":"6105E","fincaId":"recaiF7SVqHCWnfQR","fincaNombre":"Piedra Alegre","laborId":"recnhBNyQvnrKFHuy","laborNombre":"Semilla","disponibilidad":"Disponible","horometro":1777.1,"otAbierta":true,"medidor":"horas"},{"id":"rec5fOKw63s2ZzqnB","codigo":"T-243","tipo":"Tractor Agricola","marca":"Same","modelo":"Explorer 3 115 E","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"recvrSE86WZmgBXZl","laborNombre":"Cosecha","disponibilidad":"Disponible","horometro":5048.2,"otAbierta":false,"medidor":"horas"},{"id":"rec5x1XrElNMqgUa3","codigo":"T-223","tipo":"Tractor Agricola","marca":"Case","modelo":"MAXXUM 125","fincaId":"recgsy0odqXWTcNPY","fincaNombre":"Rio Cuarto","laborId":"recI35SPIrUynpSYm","laborNombre":"Aplicaciones","disponibilidad":"Disponible","horometro":14143,"otAbierta":false,"medidor":"horas"},{"id":"rec6ICLXn9JvLGsZQ","codigo":"T-244","tipo":"Tractor Agricola","marca":"Same","modelo":"Explorer 3 115 E","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"recvrSE86WZmgBXZl","laborNombre":"Cosecha","disponibilidad":"Disponible","horometro":5117.3,"otAbierta":false,"medidor":"horas"},{"id":"rec6fYU0SldTJxmkV","codigo":"T-228","tipo":"Tractor Agricola","marca":"Landini","modelo":"5-115H","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"recvrSE86WZmgBXZl","laborNombre":"Cosecha","disponibilidad":"Disponible","horometro":7858,"otAbierta":false,"medidor":"horas"},{"id":"rec6fhUUrxVXzojmh","codigo":"T-402","tipo":"Tractor Agricola","marca":"Case","modelo":"MAXXUM 125","fincaId":"recQHY85mAvvcf1kD","fincaNombre":"El Parque","laborId":"recrihBeLsL5mFplL","laborNombre":"Preparación","disponibilidad":"Disponible","horometro":4935.1,"otAbierta":false,"medidor":"horas"},{"id":"rec6moDOcUOfdhYnk","codigo":"T-250","tipo":"Tractor Agricola","marca":"Case","modelo":"MAXXUM 110","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"recI35SPIrUynpSYm","laborNombre":"Aplicaciones","disponibilidad":"Disponible","horometro":672,"otAbierta":false,"medidor":"horas"},{"id":"rec7NyaWwG01LTobe","codigo":"CL657208","tipo":"PickUp","marca":"Nissan","modelo":"Frontier","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"recMH3MK24nQpHnSL","laborNombre":"Transporte","disponibilidad":"Disponible","horometro":100841,"otAbierta":false,"medidor":"Kilometraje"},{"id":"rec85sInvuEMR5m6c","codigo":"EX-201","tipo":"Mini Excavadora","marca":"Caterpillar","modelo":"305 D","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"recrihBeLsL5mFplL","laborNombre":"Preparación","disponibilidad":"No Disponible","horometro":323.9,"otAbierta":false,"medidor":"horas"},{"id":"rec86qAk6uOvAP2j8","codigo":"V-08","tipo":"PickUp","marca":"Toyota","modelo":"Hilux","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"recMH3MK24nQpHnSL","laborNombre":"Transporte","disponibilidad":"Disponible","horometro":451325,"otAbierta":false,"medidor":"Kilometraje"},{"id":"rec8DBotGnvvzllwf","codigo":"MO-06","tipo":"Montacarga","marca":"Caterpillar","modelo":"Master Craft","fincaId":"recaiF7SVqHCWnfQR","fincaNombre":"Piedra Alegre","laborId":"recvrSE86WZmgBXZl","laborNombre":"Cosecha","disponibilidad":"Disponible","horometro":2939,"otAbierta":false,"medidor":"horas"},{"id":"rec8L5b9qfTdmgM7R","codigo":"LV-T-03","tipo":"Tractor Agricola","marca":"Lovol","modelo":"P5130","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"recrihBeLsL5mFplL","laborNombre":"Preparación","disponibilidad":"Disponible","horometro":140.2,"otAbierta":false,"medidor":"horas"},{"id":"rec8pt2D6lH4uoF7A","codigo":"M-07","tipo":"Motocicleta","marca":"Honda","modelo":"CTX 202","fincaId":"recaiF7SVqHCWnfQR","fincaNombre":"Piedra Alegre","laborId":"recMH3MK24nQpHnSL","laborNombre":"Transporte","disponibilidad":"Disponible","horometro":null,"otAbierta":false,"medidor":"Kilometraje"},{"id":"rec97XqNYwzgxpgxy","codigo":"T-404","tipo":"Tractor Agricola","marca":"Same","modelo":"Explorer 3 115 E","fincaId":"recQHY85mAvvcf1kD","fincaNombre":"El Parque","laborId":"recnhBNyQvnrKFHuy","laborNombre":"Semilla","disponibilidad":"Disponible","horometro":3123,"otAbierta":false,"medidor":"horas"},{"id":"rec98WhwcTg54opKZ","codigo":"M-205","tipo":"Motocicleta","marca":"Honda","modelo":"XR 190 CT","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"recMH3MK24nQpHnSL","laborNombre":"Transporte","disponibilidad":"Disponible","horometro":81122.2,"otAbierta":false,"medidor":"Kilometraje"},{"id":"rec9hh9ykT6IDksAI","codigo":"MO-201","tipo":"Montacarga","marca":"Hyundai","modelo":"50D-7AE","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"rec9vnSFdFXTLRMwB","laborNombre":"Bodega","disponibilidad":"Disponible","horometro":576.2,"otAbierta":false,"medidor":"horas"},{"id":"rec9iY2NXvFEFI7Kt","codigo":"T-66","tipo":"Tractor Agricola","marca":"John Deere","modelo":"6105J","fincaId":"recaiF7SVqHCWnfQR","fincaNombre":"Piedra Alegre","laborId":"recI35SPIrUynpSYm","laborNombre":"Aplicaciones","disponibilidad":"Disponible","horometro":1604.5,"otAbierta":false,"medidor":"horas"},{"id":"rec9s0tgTtjCMSaXt","codigo":"M-10","tipo":"Motocicleta","marca":"Honda","modelo":"CTX 200","fincaId":"recgsy0odqXWTcNPY","fincaNombre":"Rio Cuarto","laborId":"recMH3MK24nQpHnSL","laborNombre":"Transporte","disponibilidad":"Disponible","horometro":null,"otAbierta":false,"medidor":"Kilometraje"},{"id":"recAKpx26FwHD1HTW","codigo":"T-56","tipo":"Tractor Agricola","marca":"John Deere","modelo":"6155M","fincaId":"recaiF7SVqHCWnfQR","fincaNombre":"Piedra Alegre","laborId":"recI35SPIrUynpSYm","laborNombre":"Aplicaciones","disponibilidad":"Disponible","horometro":2696,"otAbierta":false,"medidor":"horas"},{"id":"recAPjEsGHTLsbX0K","codigo":"T-31","tipo":"Tractor Agricola","marca":"Landini","modelo":"LP DT 125","fincaId":"recaiF7SVqHCWnfQR","fincaNombre":"Piedra Alegre","laborId":"recvrSE86WZmgBXZl","laborNombre":"Cosecha","disponibilidad":"Disponible","horometro":9329.9,"otAbierta":true,"medidor":"horas"},{"id":"recAhTyW7BolMn2iJ","codigo":"T-59","tipo":"Tractor Agricola","marca":"John Deere","modelo":"6105J","fincaId":"recaiF7SVqHCWnfQR","fincaNombre":"Piedra Alegre","laborId":"recvrSE86WZmgBXZl","laborNombre":"Cosecha","disponibilidad":"Disponible","horometro":1400.6,"otAbierta":false,"medidor":"horas"},{"id":"recAj8id44GdjAN0a","codigo":"M-401","tipo":"Motocicleta","marca":"Honda","modelo":"XR 190 CT","fincaId":"recQHY85mAvvcf1kD","fincaNombre":"El Parque","laborId":"recMH3MK24nQpHnSL","laborNombre":"Transporte","disponibilidad":"Disponible","horometro":31603.5,"otAbierta":false,"medidor":"Kilometraje"},{"id":"recAnVYuI2hppgcr5","codigo":"EX-401","tipo":"Excavadora","marca":"Caterpillar","modelo":"323GX","fincaId":"recQHY85mAvvcf1kD","fincaNombre":"El Parque","laborId":"recrihBeLsL5mFplL","laborNombre":"Preparación","disponibilidad":"Disponible","horometro":5433.3,"otAbierta":false,"medidor":"horas"},{"id":"recBBw5iqtn5OecAe","codigo":"T-247","tipo":"Tractor Agricola","marca":"Same","modelo":"Explorer 3 115 E","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"recrihBeLsL5mFplL","laborNombre":"Preparación","disponibilidad":"Disponible","horometro":1835.4,"otAbierta":false,"medidor":"horas"},{"id":"recBBwllGPRn3XxEj","codigo":"TO-03","tipo":"Tractor Oruga","marca":"Caterpillar","modelo":"D6T","fincaId":"recaiF7SVqHCWnfQR","fincaNombre":"Piedra Alegre","laborId":"recrihBeLsL5mFplL","laborNombre":"Preparación","disponibilidad":"Disponible","horometro":14545.2,"otAbierta":true,"medidor":"horas"},{"id":"recBLquSsmFyb1s4J","codigo":"MO-03","tipo":"Montacarga","marca":"Gradall","modelo":"534D-9","fincaId":"recaiF7SVqHCWnfQR","fincaNombre":"Piedra Alegre","laborId":"recvrSE86WZmgBXZl","laborNombre":"Cosecha","disponibilidad":"Disponible","horometro":2400.2,"otAbierta":false,"medidor":"horas"},{"id":"recBRMQABmyV8fXwb","codigo":"V-10","tipo":"Camión","marca":"Hino","modelo":"XZU422L","fincaId":"recgsy0odqXWTcNPY","fincaNombre":"Rio Cuarto","laborId":"recMH3MK24nQpHnSL","laborNombre":"Transporte","disponibilidad":"Disponible","horometro":1030.9,"otAbierta":false,"medidor":"horas"},{"id":"recBXD5dvLWIXE8ub","codigo":"T-238","tipo":"Tractor Agricola","marca":"Same","modelo":"Explorer 3 115 E","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"recvrSE86WZmgBXZl","laborNombre":"Cosecha","disponibilidad":"Disponible","horometro":7526.7,"otAbierta":false,"medidor":"horas"},{"id":"recBdlgOIYJqMthuS","codigo":"M-27","tipo":"Motocicleta","marca":"Honda","modelo":"XR 150 LS","fincaId":"recaiF7SVqHCWnfQR","fincaNombre":"Piedra Alegre","laborId":"recMH3MK24nQpHnSL","laborNombre":"Transporte","disponibilidad":"Disponible","horometro":4731,"otAbierta":false,"medidor":"Kilometraje"},{"id":"recBnbf5hFTKtFlSK","codigo":"EX-09","tipo":"Mini Excavadora","marca":"Case","modelo":"CX57C","fincaId":"recaiF7SVqHCWnfQR","fincaNombre":"Piedra Alegre","laborId":"recrihBeLsL5mFplL","laborNombre":"Preparación","disponibilidad":"Disponible","horometro":8124.1,"otAbierta":false,"medidor":"horas"},{"id":"recC1pEReaoKBnmLN","codigo":"T-408","tipo":"Tractor Agricola","marca":"Same","modelo":"Explorer 3 115 E","fincaId":"recQHY85mAvvcf1kD","fincaNombre":"El Parque","laborId":"recvrSE86WZmgBXZl","laborNombre":"Cosecha","disponibilidad":"Disponible","horometro":1553.7,"otAbierta":false,"medidor":"horas"},{"id":"recC6k2QEQUIc7eyO","codigo":"T-219","tipo":"Tractor Agricola","marca":"Case","modelo":"MAXXUM 110","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"recqtPRXXIpsjRNh2","laborNombre":"Tanquetero","disponibilidad":"Disponible","horometro":12710,"otAbierta":true,"medidor":"horas"},{"id":"recEBF0ThR7cAGcKn","codigo":"M-210","tipo":"Motocicleta","marca":"Honda","modelo":"XR 150 LS","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"recMH3MK24nQpHnSL","laborNombre":"Transporte","disponibilidad":"Disponible","horometro":10265,"otAbierta":false,"medidor":"Kilometraje"},{"id":"recETuihlnluRf1op","codigo":"M-211","tipo":"Motocicleta","marca":"Honda","modelo":"XR 150 LS","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"recMH3MK24nQpHnSL","laborNombre":"Transporte","disponibilidad":"Disponible","horometro":null,"otAbierta":false,"medidor":"Kilometraje"},{"id":"recEhfqyY5s4YHMzv","codigo":"T-216","tipo":"Tractor Agricola","marca":"Case","modelo":"MAXXUM 125","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"recqtPRXXIpsjRNh2","laborNombre":"Tanquetero","disponibilidad":"Disponible","horometro":11151,"otAbierta":false,"medidor":"horas"},{"id":"recEi4mHh0AJBzNTU","codigo":"T-413","tipo":"Tractor Agricola","marca":"Case","modelo":"MAXXUM 110","fincaId":"recQHY85mAvvcf1kD","fincaNombre":"El Parque","laborId":"recqtPRXXIpsjRNh2","laborNombre":"Tanquetero","disponibilidad":"Disponible","horometro":1149.6,"otAbierta":false,"medidor":"horas"},{"id":"recEuAZ9MPQITadpo","codigo":"V-204","tipo":"PickUp","marca":"Mitsubishi","modelo":"L200","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"recMH3MK24nQpHnSL","laborNombre":"Transporte","disponibilidad":"Disponible","horometro":131697,"otAbierta":false,"medidor":"Kilometraje"},{"id":"recF5WfiwlvD433ao","codigo":"T-44","tipo":"Tractor Agricola","marca":"Landini","modelo":"PF 110","fincaId":"recgsy0odqXWTcNPY","fincaNombre":"Rio Cuarto","laborId":"recI35SPIrUynpSYm","laborNombre":"Aplicaciones","disponibilidad":"Disponible","horometro":1948.6,"otAbierta":false,"medidor":"horas"},{"id":"recFQ8xwQtzMQgv30","codigo":"T-245","tipo":"Tractor Agricola","marca":"Same","modelo":"Explorer 3 115 E","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"recvrSE86WZmgBXZl","laborNombre":"Cosecha","disponibilidad":"Disponible","horometro":4975.6,"otAbierta":false,"medidor":"horas"},{"id":"recFWdp5Twz5zlKBm","codigo":"V-210","tipo":"PickUp","marca":"Toyota","modelo":"Hilux","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"recMH3MK24nQpHnSL","laborNombre":"Transporte","disponibilidad":"Disponible","horometro":42729,"otAbierta":false,"medidor":"Kilometraje"},{"id":"recH3j59NlicmU68m","codigo":"AB-09","tipo":"Carreta","marca":"","modelo":"","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":null,"laborNombre":"Sin Labor","disponibilidad":"Disponible","horometro":null,"otAbierta":false,"medidor":"Kilometraje"},{"id":"recHAHpLnrrXUoTVs","codigo":"M-209","tipo":"Motocicleta","marca":"Honda","modelo":"XR 150 LS","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"recMH3MK24nQpHnSL","laborNombre":"Transporte","disponibilidad":"Disponible","horometro":3482,"otAbierta":false,"medidor":"Kilometraje"},{"id":"recHSKnVelfmG8hX8","codigo":"T-242","tipo":"Tractor Agricola","marca":"Same","modelo":"Explorer 3 115 E","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"recvrSE86WZmgBXZl","laborNombre":"Cosecha","disponibilidad":"Disponible","horometro":5028.4,"otAbierta":false,"medidor":"horas"},{"id":"recHXAXhWbcwkTGTI","codigo":"T-39","tipo":"Tractor Agricola","marca":"Landini","modelo":"PF 110","fincaId":"recgsy0odqXWTcNPY","fincaNombre":"Rio Cuarto","laborId":"recvrSE86WZmgBXZl","laborNombre":"Cosecha","disponibilidad":"Disponible","horometro":2426.9,"otAbierta":false,"medidor":"horas"},{"id":"recHgYbN31DoIgZfg","codigo":"EX-03","tipo":"Mini Excavadora","marca":"Caterpillar","modelo":"305 C","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"recrihBeLsL5mFplL","laborNombre":"Preparación","disponibilidad":"No Disponible","horometro":7573.8,"otAbierta":false,"medidor":"horas"},{"id":"recHqGxRXlJnncRL6","codigo":"BH-401","tipo":"RetroExcavador","marca":"Caterpillar","modelo":"416","fincaId":"recQHY85mAvvcf1kD","fincaNombre":"El Parque","laborId":"recrihBeLsL5mFplL","laborNombre":"Preparación","disponibilidad":"Disponible","horometro":4317.3,"otAbierta":false,"medidor":"horas"},{"id":"recHqsqL7sImxVFo8","codigo":"T-42","tipo":"Tractor Agricola","marca":"Landini","modelo":"PF 110","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"recnhBNyQvnrKFHuy","laborNombre":"Semilla","disponibilidad":"No Disponible","horometro":3253.3,"otAbierta":false,"medidor":"horas"},{"id":"recI4y5JyiZKJx5Kw","codigo":"T-236","tipo":"Tractor Agricola","marca":"Same","modelo":"Explorer 3 105 ","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"recvrSE86WZmgBXZl","laborNombre":"Cosecha","disponibilidad":"Disponible","horometro":7658.2,"otAbierta":false,"medidor":"horas"},{"id":"recIDJ42XHDztZUM5","codigo":"DF-T-1","tipo":"Tractor Agricola","marca":"Deutz Fahr","modelo":"6100.4 W","fincaId":"recgsy0odqXWTcNPY","fincaNombre":"Rio Cuarto","laborId":null,"laborNombre":"Sin Labor","disponibilidad":"Disponible","horometro":669.9,"otAbierta":false,"medidor":"horas"},{"id":"recIU90zq6tqtQNv7","codigo":"T-234","tipo":"Tractor Agricola","marca":"Same","modelo":"130 DT","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"recI35SPIrUynpSYm","laborNombre":"Aplicaciones","disponibilidad":"Disponible","horometro":14229.3,"otAbierta":false,"medidor":"horas"},{"id":"recIicqCFoP7cUZS9","codigo":"EX-206","tipo":"Mini Excavadora","marca":"Caterpillar","modelo":"307","fincaId":"recgsy0odqXWTcNPY","fincaNombre":"Rio Cuarto","laborId":"recrihBeLsL5mFplL","laborNombre":"Preparación","disponibilidad":"Disponible","horometro":3388,"otAbierta":false,"medidor":"horas"},{"id":"recJMw7lVvWmjEVH4","codigo":"V-21","tipo":"PickUp","marca":"Mitsubishi","modelo":"L200","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"recMH3MK24nQpHnSL","laborNombre":"Transporte","disponibilidad":"Disponible","horometro":122094,"otAbierta":false,"medidor":"Kilometraje"},{"id":"recJQuCBc1e4nftiC","codigo":"MO-202","tipo":"Montacarga","marca":"JCB","modelo":"541-70 Agri","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"recvrSE86WZmgBXZl","laborNombre":"Cosecha","disponibilidad":"Disponible","horometro":12223.8,"otAbierta":false,"medidor":"horas"},{"id":"recJpSb7F0cd1rgUn","codigo":"V-15","tipo":"PickUp","marca":"Mitsubishi","modelo":"L200","fincaId":"recaiF7SVqHCWnfQR","fincaNombre":"Piedra Alegre","laborId":"recMH3MK24nQpHnSL","laborNombre":"Transporte","disponibilidad":"Disponible","horometro":115630,"otAbierta":false,"medidor":"Kilometraje"},{"id":"recJyzuP3vG0vqGhi","codigo":"TO-401","tipo":"Tractor Oruga","marca":"Komatsu","modelo":"D65EX-16","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"recrihBeLsL5mFplL","laborNombre":"Preparación","disponibilidad":"Disponible","horometro":5098,"otAbierta":false,"medidor":"horas"},{"id":"recKwaRj3tb15vchc","codigo":"T-252","tipo":"Tractor Agricola","marca":"Case","modelo":"MAXXUM 125","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":null,"laborNombre":"Sin Labor","disponibilidad":"Disponible","horometro":30.3,"otAbierta":false,"medidor":"horas"},{"id":"recLBeJUv2foznZtt","codigo":"M-17","tipo":"Motocicleta","marca":"Honda","modelo":"XR 190 CT","fincaId":"recaiF7SVqHCWnfQR","fincaNombre":"Piedra Alegre","laborId":"recMH3MK24nQpHnSL","laborNombre":"Transporte","disponibilidad":"Disponible","horometro":62164.9,"otAbierta":false,"medidor":"Kilometraje"},{"id":"recLkMu90Tv30EA11","codigo":"T-401","tipo":"Tractor Agricola","marca":"Case","modelo":"MAXXUM 125","fincaId":"recQHY85mAvvcf1kD","fincaNombre":"El Parque","laborId":"recI35SPIrUynpSYm","laborNombre":"Aplicaciones","disponibilidad":"Disponible","horometro":5916.5,"otAbierta":false,"medidor":"horas"},{"id":"recLorUAOjKwNEjog","codigo":"T-412","tipo":"Tractor Agricola","marca":"Same","modelo":"Explorer 3 115 E","fincaId":"recQHY85mAvvcf1kD","fincaNombre":"El Parque","laborId":"recvrSE86WZmgBXZl","laborNombre":"Cosecha","disponibilidad":"Disponible","horometro":928.3,"otAbierta":false,"medidor":"horas"},{"id":"recM4rWVmnoiDfBy0","codigo":"T-414","tipo":"Tractor Agricola","marca":"Case","modelo":"MAXXUM 110","fincaId":"recQHY85mAvvcf1kD","fincaNombre":"El Parque","laborId":"recI35SPIrUynpSYm","laborNombre":"Aplicaciones","disponibilidad":"Disponible","horometro":979.2,"otAbierta":false,"medidor":"horas"},{"id":"recN0F6DQWrYZexVd","codigo":"T-23","tipo":"Tractor Agricola","marca":"Landini","modelo":"GF 100","fincaId":"recaiF7SVqHCWnfQR","fincaNombre":"Piedra Alegre","laborId":"recvrSE86WZmgBXZl","laborNombre":"Cosecha","disponibilidad":"No Disponible","horometro":13217.7,"otAbierta":false,"medidor":"horas"},{"id":"recNSEa73IgLN8nQI","codigo":"M-20","tipo":"Motocicleta","marca":"Honda","modelo":"XR 190 CT","fincaId":"recQHY85mAvvcf1kD","fincaNombre":"El Parque","laborId":"recMH3MK24nQpHnSL","laborNombre":"Transporte","disponibilidad":"Disponible","horometro":35710.8,"otAbierta":false,"medidor":"Kilometraje"},{"id":"recNSi7htBk3oaLFB","codigo":"T-237","tipo":"Tractor Agricola","marca":"Same","modelo":"Explorer 3 115 E","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"recvrSE86WZmgBXZl","laborNombre":"Cosecha","disponibilidad":"Disponible","horometro":7893.5,"otAbierta":false,"medidor":"horas"},{"id":"recNa4kgIfUs8FuW2","codigo":"MO-07","tipo":"Montacarga","marca":"Manitou","modelo":"M-X50-4","fincaId":"recgsy0odqXWTcNPY","fincaNombre":"Rio Cuarto","laborId":"recvrSE86WZmgBXZl","laborNombre":"Cosecha","disponibilidad":"Disponible","horometro":1882.9,"otAbierta":false,"medidor":"horas"},{"id":"recNk0bkTVN3489h1","codigo":"T-51","tipo":"Tractor Agricola","marca":"Case","modelo":"PUMA 140","fincaId":"recaiF7SVqHCWnfQR","fincaNombre":"Piedra Alegre","laborId":"recrihBeLsL5mFplL","laborNombre":"Preparación","disponibilidad":"Disponible","horometro":9186.5,"otAbierta":false,"medidor":"horas"},{"id":"recNtyITlRmHD8RMy","codigo":"T-407","tipo":"Tractor Agricola","marca":"Case","modelo":"MAXXUM 125","fincaId":"recQHY85mAvvcf1kD","fincaNombre":"El Parque","laborId":"recI35SPIrUynpSYm","laborNombre":"Aplicaciones","disponibilidad":"Disponible","horometro":1861,"otAbierta":false,"medidor":"horas"},{"id":"recNu2SJNE2N0Iwus","codigo":"T-235","tipo":"Tractor Agricola","marca":"Same","modelo":"130 DT","fincaId":"recgsy0odqXWTcNPY","fincaNombre":"Rio Cuarto","laborId":"recrihBeLsL5mFplL","laborNombre":"Preparación","disponibilidad":"Disponible","horometro":7939.6,"otAbierta":false,"medidor":"horas"},{"id":"recNuLV3xhe1uLZli","codigo":"EX-205","tipo":"Mini Excavadora","marca":"Caterpillar","modelo":"305","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"recrihBeLsL5mFplL","laborNombre":"Preparación","disponibilidad":"Disponible","horometro":3069.5,"otAbierta":false,"medidor":"horas"},{"id":"recNudIrZIpqQKxXW","codigo":"V-18","tipo":"PickUp","marca":"Mitsubishi","modelo":"L200","fincaId":"recaiF7SVqHCWnfQR","fincaNombre":"Piedra Alegre","laborId":"recMH3MK24nQpHnSL","laborNombre":"Transporte","disponibilidad":"Disponible","horometro":91802,"otAbierta":true,"medidor":"Kilometraje"},{"id":"recO1xHd36KjVr1zg","codigo":"T-53","tipo":"Tractor Agricola","marca":"John Deere","modelo":"6155M","fincaId":"recaiF7SVqHCWnfQR","fincaNombre":"Piedra Alegre","laborId":"recI35SPIrUynpSYm","laborNombre":"Aplicaciones","disponibilidad":"Disponible","horometro":2623.7,"otAbierta":false,"medidor":"horas"},{"id":"recOLKidOmedjK1jQ","codigo":"T-36","tipo":"Tractor Agricola","marca":"Landini","modelo":"PF 110","fincaId":"recgsy0odqXWTcNPY","fincaNombre":"Rio Cuarto","laborId":null,"laborNombre":"Sin Labor","disponibilidad":"Disponible","horometro":4478.8,"otAbierta":true,"medidor":"horas"},{"id":"recPK1N3F0fin92lM","codigo":"T-54","tipo":"Tractor Agricola","marca":"John Deere","modelo":"6125M","fincaId":"recaiF7SVqHCWnfQR","fincaNombre":"Piedra Alegre","laborId":"recrihBeLsL5mFplL","laborNombre":"Preparación","disponibilidad":"Disponible","horometro":2128.5,"otAbierta":false,"medidor":"horas"},{"id":"recPc3XkwKxonSNQ8","codigo":"V-205","tipo":"PickUp","marca":"Mitsubishi","modelo":"L200","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"recMH3MK24nQpHnSL","laborNombre":"Transporte","disponibilidad":"Disponible","horometro":289515,"otAbierta":true,"medidor":"Kilometraje"},{"id":"recPoIucOuFdnOvCc","codigo":"T-241","tipo":"Tractor Agricola","marca":"Same","modelo":"Explorer 3 115 E","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"rechuILWIfByvwJaE","laborNombre":"Taller","disponibilidad":"Disponible","horometro":9842.9,"otAbierta":false,"medidor":"horas"},{"id":"recQ0czr3lGP6lR5l","codigo":"EX-204","tipo":"Mini Excavadora","marca":"Case","modelo":"CX57C","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"recrihBeLsL5mFplL","laborNombre":"Preparación","disponibilidad":"Disponible","horometro":6209.9,"otAbierta":true,"medidor":"horas"},{"id":"recQOrg7ZtSAdGmP7","codigo":"V-16","tipo":"PickUp","marca":"Mitsubishi","modelo":"L200","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"recMH3MK24nQpHnSL","laborNombre":"Transporte","disponibilidad":"Disponible","horometro":225080,"otAbierta":false,"medidor":"Kilometraje"},{"id":"recQPjkRKbRWBaRzj","codigo":"T-21","tipo":"Tractor Agricola","marca":"Landini","modelo":"PF 110","fincaId":"recaiF7SVqHCWnfQR","fincaNombre":"Piedra Alegre","laborId":"recI35SPIrUynpSYm","laborNombre":"Aplicaciones","disponibilidad":"Disponible","horometro":2577.9,"otAbierta":false,"medidor":"horas"},{"id":"recQUXqXbBlOhWrDd","codigo":"T-46","tipo":"Tractor Agricola","marca":"Case","modelo":"MAXXUM 125","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"recI35SPIrUynpSYm","laborNombre":"Aplicaciones","disponibilidad":"No Disponible","horometro":21968,"otAbierta":true,"medidor":"horas"},{"id":"recQqGsx9aQTeqGtj","codigo":"V-206","tipo":"Camión","marca":"Hino","modelo":"XZU710L","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"recMH3MK24nQpHnSL","laborNombre":"Transporte","disponibilidad":"Disponible","horometro":324819,"otAbierta":false,"medidor":"Kilometraje"},{"id":"recQulJGVqzF5Kn5b","codigo":"T-233","tipo":"Tractor Agricola","marca":"Case","modelo":"MAXXUM 125","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"recrihBeLsL5mFplL","laborNombre":"Preparación","disponibilidad":"Disponible","horometro":11189,"otAbierta":false,"medidor":"horas"},{"id":"recQyMtI7ZH6CIQyK","codigo":"MO-02","tipo":"Montacarga","marca":"JCB","modelo":"930","fincaId":"recgsy0odqXWTcNPY","fincaNombre":"Rio Cuarto","laborId":"recvrSE86WZmgBXZl","laborNombre":"Cosecha","disponibilidad":"Disponible","horometro":1928.9,"otAbierta":false,"medidor":"horas"},{"id":"recRAUT47QrUVWbct","codigo":"M-25","tipo":"Motocicleta","marca":"Honda","modelo":"XR 150 LS","fincaId":"recgsy0odqXWTcNPY","fincaNombre":"Rio Cuarto","laborId":"recMH3MK24nQpHnSL","laborNombre":"Transporte","disponibilidad":"Disponible","horometro":2835,"otAbierta":false,"medidor":"Kilometraje"},{"id":"recRRhxKXnwXlpqel","codigo":"T-246","tipo":"Tractor Agricola","marca":"Same","modelo":"Explorer 3 115 E","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"recI35SPIrUynpSYm","laborNombre":"Aplicaciones","disponibilidad":"Disponible","horometro":1044,"otAbierta":false,"medidor":"horas"},{"id":"recRUHABLFSBmRVAb","codigo":"T-222","tipo":"Tractor Agricola","marca":"Case","modelo":"MAXXUM 110","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"recqtPRXXIpsjRNh2","laborNombre":"Tanquetero","disponibilidad":"Disponible","horometro":11393,"otAbierta":false,"medidor":"horas"},{"id":"recRaCWvsvcSgBRUO","codigo":"T-30","tipo":"Tractor Agricola","marca":"Landini","modelo":"LP DT 135","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"recqtPRXXIpsjRNh2","laborNombre":"Tanquetero","disponibilidad":"Disponible","horometro":26886,"otAbierta":false,"medidor":"horas"},{"id":"recRy9U2BYl7beGki","codigo":"T-71","tipo":"Tractor Agricola","marca":"Same","modelo":"Explorer 3 115 E","fincaId":"recgsy0odqXWTcNPY","fincaNombre":"Rio Cuarto","laborId":"recqtPRXXIpsjRNh2","laborNombre":"Tanquetero","disponibilidad":"Disponible","horometro":1480.3,"otAbierta":true,"medidor":"horas"},{"id":"recSfVU1DDYIf5j0g","codigo":"M-03","tipo":"Motocicleta","marca":"Honda","modelo":"CTX 200","fincaId":"recaiF7SVqHCWnfQR","fincaNombre":"Piedra Alegre","laborId":"recMH3MK24nQpHnSL","laborNombre":"Transporte","disponibilidad":"Disponible","horometro":null,"otAbierta":false,"medidor":"Kilometraje"},{"id":"recTBvhj5ztYQPHZ2","codigo":"TO-202","tipo":"Tractor Oruga","marca":"Caterpillar","modelo":"D3K2","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"recrihBeLsL5mFplL","laborNombre":"Preparación","disponibilidad":"Disponible","horometro":14934.9,"otAbierta":false,"medidor":"horas"},{"id":"recTUcpXn6Ja87Sdl","codigo":"C-232","tipo":"Carreta","marca":"","modelo":"","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"recMH3MK24nQpHnSL","laborNombre":"Transporte","disponibilidad":"Disponible","horometro":null,"otAbierta":false,"medidor":"Kilometraje"},{"id":"recTespTpR6JZUu8V","codigo":"T-22","tipo":"Tractor Agricola","marca":"Landini","modelo":"GF 100","fincaId":"recaiF7SVqHCWnfQR","fincaNombre":"Piedra Alegre","laborId":"recvrSE86WZmgBXZl","laborNombre":"Cosecha","disponibilidad":"Disponible","horometro":99204.7,"otAbierta":true,"medidor":"horas"},{"id":"recU6zQkPjhaibpsN","codigo":"T-409","tipo":"Tractor Agricola","marca":"Same","modelo":"Explorer 3 115 E","fincaId":"recQHY85mAvvcf1kD","fincaNombre":"El Parque","laborId":"recvrSE86WZmgBXZl","laborNombre":"Cosecha","disponibilidad":"Disponible","horometro":1290.3,"otAbierta":false,"medidor":"horas"},{"id":"recUAOhYZhgB8jEgO","codigo":"T-215","tipo":"Tractor Agricola","marca":"Landini","modelo":"LP 165","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"recrihBeLsL5mFplL","laborNombre":"Preparación","disponibilidad":"Disponible","horometro":13792.5,"otAbierta":false,"medidor":"horas"},{"id":"recV1W09bQb4Jkvgm","codigo":"M-22","tipo":"Motocicleta","marca":"Honda","modelo":"XR 190 CT","fincaId":"recgsy0odqXWTcNPY","fincaNombre":"Rio Cuarto","laborId":"recMH3MK24nQpHnSL","laborNombre":"Transporte","disponibilidad":"Disponible","horometro":48727.9,"otAbierta":false,"medidor":"Kilometraje"},{"id":"recV6yjtyBWsv49Wy","codigo":"T-224","tipo":"Tractor Agricola","marca":"Case","modelo":"MAXXUM 125","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"recrihBeLsL5mFplL","laborNombre":"Preparación","disponibilidad":"Disponible","horometro":11411,"otAbierta":false,"medidor":"horas"},{"id":"recWE93PmdJLREznP","codigo":"M-11","tipo":"Motocicleta","marca":"Honda","modelo":"CTX 200","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"recMH3MK24nQpHnSL","laborNombre":"Transporte","disponibilidad":"Disponible","horometro":null,"otAbierta":false,"medidor":"Kilometraje"},{"id":"recWaLnvVZi3Za8pm","codigo":"C-233","tipo":"Carreta","marca":"","modelo":"","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":null,"laborNombre":"Sin Labor","disponibilidad":"Disponible","horometro":null,"otAbierta":false,"medidor":"Kilometraje"},{"id":"recWcSBKp5pc5l34i","codigo":"M-15","tipo":"Motocicleta","marca":"Honda","modelo":"CTX 200","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"recMH3MK24nQpHnSL","laborNombre":"Transporte","disponibilidad":"Disponible","horometro":null,"otAbierta":false,"medidor":"Kilometraje"},{"id":"recWq7HyvjR490nro","codigo":"V-213","tipo":"PickUp","marca":"Toyota","modelo":"Hilux","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"recMH3MK24nQpHnSL","laborNombre":"Transporte","disponibilidad":"Disponible","horometro":6033,"otAbierta":false,"medidor":"Kilometraje"},{"id":"recXJfhszjwadUcdq","codigo":"T-232","tipo":"Tractor Agricola","marca":"Landini","modelo":"LF 120","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"recnhBNyQvnrKFHuy","laborNombre":"Semilla","disponibilidad":"Disponible","horometro":6345,"otAbierta":false,"medidor":"horas"},{"id":"recXLkspNaJGdWg9R","codigo":"T-406","tipo":"Tractor Agricola","marca":"Same","modelo":"Explorer 3 115 E","fincaId":"recQHY85mAvvcf1kD","fincaNombre":"El Parque","laborId":"recrihBeLsL5mFplL","laborNombre":"Preparación","disponibilidad":"Disponible","horometro":1821.3,"otAbierta":false,"medidor":"horas"},{"id":"recXQPOHeXhrnbyvv","codigo":"M-405","tipo":"Motocicleta","marca":"Honda","modelo":"XR 150 LS","fincaId":"recQHY85mAvvcf1kD","fincaNombre":"El Parque","laborId":"recMH3MK24nQpHnSL","laborNombre":"Transporte","disponibilidad":"Disponible","horometro":2483,"otAbierta":false,"medidor":"Kilometraje"},{"id":"recXRkA0liBiZMHYf","codigo":"M-30","tipo":"Motocicleta","marca":"Honda","modelo":"XR 150 LS","fincaId":"recgsy0odqXWTcNPY","fincaNombre":"Rio Cuarto","laborId":"recMH3MK24nQpHnSL","laborNombre":"Transporte","disponibilidad":"Disponible","horometro":666,"otAbierta":false,"medidor":"Kilometraje"},{"id":"recXgSaNGZUyV51mx","codigo":"V-25","tipo":"PickUp","marca":"Toyota","modelo":"Hilux","fincaId":"recaiF7SVqHCWnfQR","fincaNombre":"Piedra Alegre","laborId":"recMH3MK24nQpHnSL","laborNombre":"Transporte","disponibilidad":"Disponible","horometro":24900,"otAbierta":false,"medidor":"Kilometraje"},{"id":"recXn46enYXpCRTXD","codigo":"T-49","tipo":"Tractor Agricola","marca":"Landini","modelo":"LF 120","fincaId":"recaiF7SVqHCWnfQR","fincaNombre":"Piedra Alegre","laborId":"recvrSE86WZmgBXZl","laborNombre":"Cosecha","disponibilidad":"Disponible","horometro":9997.5,"otAbierta":true,"medidor":"horas"},{"id":"recYi9Ria3bKaia0U","codigo":"M-404","tipo":"Motocicleta","marca":"Honda","modelo":"XR 150 LS","fincaId":"recQHY85mAvvcf1kD","fincaNombre":"El Parque","laborId":"recMH3MK24nQpHnSL","laborNombre":"Transporte","disponibilidad":"Disponible","horometro":7548,"otAbierta":false,"medidor":"Kilometraje"},{"id":"recZ9p3G3GGa2rknI","codigo":"T-218","tipo":"Tractor Agricola","marca":"Case","modelo":"MAXXUM 110","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"recqtPRXXIpsjRNh2","laborNombre":"Tanquetero","disponibilidad":"Disponible","horometro":12300,"otAbierta":false,"medidor":"horas"},{"id":"recZQaDVsyi35aGxm","codigo":"M-12","tipo":"Motocicleta","marca":"Honda","modelo":"CTX 203","fincaId":"recaiF7SVqHCWnfQR","fincaNombre":"Piedra Alegre","laborId":"recMH3MK24nQpHnSL","laborNombre":"Transporte","disponibilidad":"Disponible","horometro":39488.6,"otAbierta":false,"medidor":"Kilometraje"},{"id":"recZdHPlqNv8D01IX","codigo":"MO-08","tipo":"Montacarga","marca":"Manitou","modelo":"M-X50-4","fincaId":"recaiF7SVqHCWnfQR","fincaNombre":"Piedra Alegre","laborId":"recvrSE86WZmgBXZl","laborNombre":"Cosecha","disponibilidad":"Disponible","horometro":193.61,"otAbierta":false,"medidor":"horas"},{"id":"reca5BpGwFtCT7yQ5","codigo":"M-26","tipo":"Motocicleta","marca":"Honda","modelo":"XR 150 LS","fincaId":"recgsy0odqXWTcNPY","fincaNombre":"Rio Cuarto","laborId":"recMH3MK24nQpHnSL","laborNombre":"Transporte","disponibilidad":"Disponible","horometro":4843,"otAbierta":false,"medidor":"Kilometraje"},{"id":"recaD6ykAsRzTcmvt","codigo":"T-405","tipo":"Tractor Agricola","marca":"Case","modelo":"PUMA 155","fincaId":"recgsy0odqXWTcNPY","fincaNombre":"Rio Cuarto","laborId":"recrihBeLsL5mFplL","laborNombre":"Preparación","disponibilidad":"Disponible","horometro":3643.3,"otAbierta":false,"medidor":"horas"},{"id":"recaLcRYSKCeHhZ1J","codigo":"EX-02","tipo":"Mini Excavadora","marca":"Caterpillar","modelo":"305 D","fincaId":"recaiF7SVqHCWnfQR","fincaNombre":"Piedra Alegre","laborId":"recrihBeLsL5mFplL","laborNombre":"Preparación","disponibilidad":"Disponible","horometro":1861.4,"otAbierta":false,"medidor":"horas"},{"id":"recaMfgdmr6WxcDbQ","codigo":"LV-EX-01","tipo":"Mini Excavadora","marca":"Lovol","modelo":"FR80F","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"recrihBeLsL5mFplL","laborNombre":"Preparación","disponibilidad":"Disponible","horometro":196.4,"otAbierta":false,"medidor":"horas"},{"id":"recaX9tITDf4DlqQ3","codigo":"T-43","tipo":"Tractor Agricola","marca":"Landini","modelo":"PF 110","fincaId":"recgsy0odqXWTcNPY","fincaNombre":"Rio Cuarto","laborId":"recvrSE86WZmgBXZl","laborNombre":"Cosecha","disponibilidad":"Disponible","horometro":1711.5,"otAbierta":true,"medidor":"horas"},{"id":"recahYML7qiMDKb8F","codigo":"T-249","tipo":"Tractor Agricola","marca":"Same","modelo":"Explorer 3 115 E","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"recnhBNyQvnrKFHuy","laborNombre":"Semilla","disponibilidad":"Disponible","horometro":1589.3,"otAbierta":false,"medidor":"horas"},{"id":"recauTW0WvlptYwVt","codigo":"T-50","tipo":"Tractor Agricola","marca":"Landini","modelo":"LF 120","fincaId":"recgsy0odqXWTcNPY","fincaNombre":"Rio Cuarto","laborId":"recvrSE86WZmgBXZl","laborNombre":"Cosecha","disponibilidad":"Disponible","horometro":8131.9,"otAbierta":false,"medidor":"horas"},{"id":"recb8jU8VetAUN1eS","codigo":"T-34","tipo":"Tractor Agricola","marca":"Landini","modelo":"LP 135","fincaId":"recaiF7SVqHCWnfQR","fincaNombre":"Piedra Alegre","laborId":"recnhBNyQvnrKFHuy","laborNombre":"Semilla","disponibilidad":"Disponible","horometro":913.8,"otAbierta":false,"medidor":"horas"},{"id":"recbmeyUdNjLyjpl9","codigo":"BH-201","tipo":"RetroExcavador","marca":"Case","modelo":"580 Super N","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"recrihBeLsL5mFplL","laborNombre":"Preparación","disponibilidad":"Disponible","horometro":8021.6,"otAbierta":false,"medidor":"horas"},{"id":"recbn1OdEpG3Y2YBR","codigo":"T-220","tipo":"Tractor Agricola","marca":"Case","modelo":"MAXXUM 110","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"recnhBNyQvnrKFHuy","laborNombre":"Semilla","disponibilidad":"Disponible","horometro":10597,"otAbierta":false,"medidor":"horas"},{"id":"reccUh1mxvjyQghOv","codigo":"T-52","tipo":"Tractor Agricola","marca":"John Deere","modelo":"6125M","fincaId":"recgsy0odqXWTcNPY","fincaNombre":"Rio Cuarto","laborId":"recrihBeLsL5mFplL","laborNombre":"Preparación","disponibilidad":"Disponible","horometro":2123.2,"otAbierta":false,"medidor":"horas"},{"id":"reccUhbyALeWOaeoP","codigo":"MO-204","tipo":"Montacarga","marca":"Caterpillar","modelo":"Master Craft","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"rec9vnSFdFXTLRMwB","laborNombre":"Bodega","disponibilidad":"Disponible","horometro":6678.8,"otAbierta":false,"medidor":"horas"},{"id":"reccYYExcqwZH6PGx","codigo":"EX-10","tipo":"Mini Excavadora","marca":"Caterpillar","modelo":"307","fincaId":"recaiF7SVqHCWnfQR","fincaNombre":"Piedra Alegre","laborId":"recrihBeLsL5mFplL","laborNombre":"Preparación","disponibilidad":"Disponible","horometro":4163.4,"otAbierta":false,"medidor":"horas"},{"id":"reccYyH3nlDZqwvP1","codigo":"T-57","tipo":"Tractor Agricola","marca":"John Deere","modelo":"6105J","fincaId":"recaiF7SVqHCWnfQR","fincaNombre":"Piedra Alegre","laborId":"recnhBNyQvnrKFHuy","laborNombre":"Semilla","disponibilidad":"Disponible","horometro":1753.9,"otAbierta":false,"medidor":"horas"},{"id":"recd9efDVKy98Yomh","codigo":"M-06","tipo":"Motocicleta","marca":"Honda","modelo":"CTX 201","fincaId":"recaiF7SVqHCWnfQR","fincaNombre":"Piedra Alegre","laborId":"recMH3MK24nQpHnSL","laborNombre":"Transporte","disponibilidad":"Disponible","horometro":null,"otAbierta":false,"medidor":"Kilometraje"},{"id":"recdWiLhkT4lsQmPK","codigo":"T-47","tipo":"Tractor Agricola","marca":"Case","modelo":"MAXXUM 125","fincaId":"recgsy0odqXWTcNPY","fincaNombre":"Rio Cuarto","laborId":"recI35SPIrUynpSYm","laborNombre":"Aplicaciones","disponibilidad":"Disponible","horometro":17683,"otAbierta":false,"medidor":"horas"},{"id":"recdXTLtbBAWi9ACH","codigo":"V-20","tipo":"PickUp","marca":"Mitsubishi","modelo":"L200","fincaId":"recQHY85mAvvcf1kD","fincaNombre":"El Parque","laborId":"recMH3MK24nQpHnSL","laborNombre":"Transporte","disponibilidad":"Disponible","horometro":101586,"otAbierta":false,"medidor":"Kilometraje"},{"id":"recdZE2gmvaEBPxad","codigo":"MO-401","tipo":"Montacarga","marca":"Manitou","modelo":"M-X50-4","fincaId":"recQHY85mAvvcf1kD","fincaNombre":"El Parque","laborId":"recvrSE86WZmgBXZl","laborNombre":"Cosecha","disponibilidad":"Disponible","horometro":45.6,"otAbierta":false,"medidor":"horas"},{"id":"rece2XOzfRR5kUvL0","codigo":"T-67","tipo":"Tractor Agricola","marca":"Same","modelo":"Explorer 3 115 E","fincaId":"recaiF7SVqHCWnfQR","fincaNombre":"Piedra Alegre","laborId":"recvrSE86WZmgBXZl","laborNombre":"Cosecha","disponibilidad":"Disponible","horometro":1947.7,"otAbierta":false,"medidor":"horas"},{"id":"receqdUONTD0H2vhb","codigo":"TO-201","tipo":"Tractor Oruga","marca":"Caterpillar","modelo":"D6T XL","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"recrihBeLsL5mFplL","laborNombre":"Preparación","disponibilidad":"Disponible","horometro":16338.3,"otAbierta":false,"medidor":"horas"},{"id":"recfQArnSKHvifeRU","codigo":"M-24","tipo":"Motocicleta","marca":"Honda","modelo":"XR 190 CT","fincaId":"recgsy0odqXWTcNPY","fincaNombre":"Rio Cuarto","laborId":"recMH3MK24nQpHnSL","laborNombre":"Transporte","disponibilidad":"Disponible","horometro":5293.3,"otAbierta":true,"medidor":"Kilometraje"},{"id":"recftJfr0H3yXHhRS","codigo":"MO-05","tipo":"Montacarga","marca":"JCB","modelo":"535-125","fincaId":"recgsy0odqXWTcNPY","fincaNombre":"Rio Cuarto","laborId":"recvrSE86WZmgBXZl","laborNombre":"Cosecha","disponibilidad":"Disponible","horometro":1997.8,"otAbierta":false,"medidor":"horas"},{"id":"recfzdERdcnntPtB1","codigo":"T-38","tipo":"Tractor Agricola","marca":"Landini","modelo":"PF 110","fincaId":"recgsy0odqXWTcNPY","fincaNombre":"Rio Cuarto","laborId":"recvrSE86WZmgBXZl","laborNombre":"Cosecha","disponibilidad":"Disponible","horometro":370.1,"otAbierta":false,"medidor":"horas"},{"id":"recg3agyTRwEfHrHV","codigo":"T-69","tipo":"Tractor Agricola","marca":"Same","modelo":"Explorer 3 115 E","fincaId":"recgsy0odqXWTcNPY","fincaNombre":"Rio Cuarto","laborId":"recqtPRXXIpsjRNh2","laborNombre":"Tanquetero","disponibilidad":"No Disponible","horometro":1465.8,"otAbierta":false,"medidor":"horas"},{"id":"recgVoo5EMhuezQt5","codigo":"M-403","tipo":"Motocicleta","marca":"Honda","modelo":"XR 150 LS","fincaId":"recQHY85mAvvcf1kD","fincaNombre":"El Parque","laborId":"recMH3MK24nQpHnSL","laborNombre":"Transporte","disponibilidad":"Disponible","horometro":15238,"otAbierta":false,"medidor":"Kilometraje"},{"id":"recgjKzdJqDcp7cGO","codigo":"C-235","tipo":"Carreta","marca":"","modelo":"","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":null,"laborNombre":"Sin Labor","disponibilidad":"Disponible","horometro":null,"otAbierta":false,"medidor":"Kilometraje"},{"id":"rechilyRfId7YmVaM","codigo":"M-208","tipo":"Motocicleta","marca":"Honda","modelo":"XR 190 CT","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"recMH3MK24nQpHnSL","laborNombre":"Transporte","disponibilidad":"Disponible","horometro":22122,"otAbierta":false,"medidor":"Kilometraje"},{"id":"reci3ikZyIhTPWThO","codigo":"T-240","tipo":"Tractor Agricola","marca":"Same","modelo":"Explorer 3 115 E","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"recvrSE86WZmgBXZl","laborNombre":"Cosecha","disponibilidad":"Disponible","horometro":4899.8,"otAbierta":false,"medidor":"horas"},{"id":"reciEXG83LPZt9fgv","codigo":"M-402","tipo":"Motocicleta","marca":"Honda","modelo":"XR 190 CT","fincaId":"recQHY85mAvvcf1kD","fincaNombre":"El Parque","laborId":"recMH3MK24nQpHnSL","laborNombre":"Transporte","disponibilidad":"Disponible","horometro":28225,"otAbierta":false,"medidor":"Kilometraje"},{"id":"reciTkiaFUfsyQrT0","codigo":"M-28","tipo":"Motocicleta","marca":"Honda","modelo":"XR 150 LS","fincaId":"recaiF7SVqHCWnfQR","fincaNombre":"Piedra Alegre","laborId":"recMH3MK24nQpHnSL","laborNombre":"Transporte","disponibilidad":"Disponible","horometro":3851,"otAbierta":true,"medidor":"Kilometraje"},{"id":"reciUwjCJOGislpC6","codigo":"V-11","tipo":"Camión","marca":"Militar","modelo":"Harsco","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"recMH3MK24nQpHnSL","laborNombre":"Transporte","disponibilidad":"Disponible","horometro":6921.3,"otAbierta":false,"medidor":"horas"},{"id":"recij5x0JNAVoQfsZ","codigo":"M-207","tipo":"Motocicleta","marca":"Honda","modelo":"XR 190 CT","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"recMH3MK24nQpHnSL","laborNombre":"Transporte","disponibilidad":"Disponible","horometro":37798.9,"otAbierta":false,"medidor":"Kilometraje"},{"id":"recinljwAClqiAYHR","codigo":"T-410","tipo":"Tractor Agricola","marca":"Same","modelo":"Explorer 3 115 E","fincaId":"recQHY85mAvvcf1kD","fincaNombre":"El Parque","laborId":"recvrSE86WZmgBXZl","laborNombre":"Cosecha","disponibilidad":"Disponible","horometro":1228.2,"otAbierta":false,"medidor":"horas"},{"id":"recjnWd7Te3IsRmMM","codigo":"EX-12","tipo":"Mini Excavadora","marca":"Develon","modelo":"DX75-7B","fincaId":"recgsy0odqXWTcNPY","fincaNombre":"Rio Cuarto","laborId":"recrihBeLsL5mFplL","laborNombre":"Preparación","disponibilidad":"Disponible","horometro":82.3,"otAbierta":false,"medidor":"horas"},{"id":"recjqNGC5YhKPbOZn","codigo":"MO-206","tipo":"Montacarga","marca":"Manitou","modelo":"M-X50-4","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"recvrSE86WZmgBXZl","laborNombre":"Cosecha","disponibilidad":"Disponible","horometro":68.85,"otAbierta":false,"medidor":"horas"},{"id":"reck48K8jUaUkxK8P","codigo":"T-248","tipo":"Tractor Agricola","marca":"Same","modelo":"Explorer 3 115 E","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"recvrSE86WZmgBXZl","laborNombre":"Cosecha","disponibilidad":"Disponible","horometro":1695.1,"otAbierta":false,"medidor":"horas"},{"id":"reckTYDHHN3OrfiNK","codigo":"M-206","tipo":"Motocicleta","marca":"Honda","modelo":"XR 190 CT","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"recMH3MK24nQpHnSL","laborNombre":"Transporte","disponibilidad":"Disponible","horometro":38885.5,"otAbierta":false,"medidor":"Kilometraje"},{"id":"reckZBl4fl0HvyWqo","codigo":"T-37","tipo":"Tractor Agricola","marca":"Landini","modelo":"PF 110","fincaId":"recgsy0odqXWTcNPY","fincaNombre":"Rio Cuarto","laborId":"recnhBNyQvnrKFHuy","laborNombre":"Semilla","disponibilidad":"Disponible","horometro":5462.2,"otAbierta":true,"medidor":"horas"},{"id":"recl8bqNigVF3fzzT","codigo":"EX-203","tipo":"Excavadora","marca":"Caterpillar","modelo":"320 C","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"recrihBeLsL5mFplL","laborNombre":"Preparación","disponibilidad":"Disponible","horometro":18158.9,"otAbierta":false,"medidor":"horas"},{"id":"reclWjROizdHJMoIF","codigo":"M-18","tipo":"Motocicleta","marca":"Honda","modelo":"XR 190 CT","fincaId":"recaiF7SVqHCWnfQR","fincaNombre":"Piedra Alegre","laborId":"recMH3MK24nQpHnSL","laborNombre":"Transporte","disponibilidad":"Disponible","horometro":58281,"otAbierta":false,"medidor":"Kilometraje"},{"id":"recljLHuz2hvuu9vO","codigo":"T-65","tipo":"Tractor Agricola","marca":"John Deere","modelo":"6105J","fincaId":"recaiF7SVqHCWnfQR","fincaNombre":"Piedra Alegre","laborId":"recvrSE86WZmgBXZl","laborNombre":"Cosecha","disponibilidad":"Disponible","horometro":1342.6,"otAbierta":false,"medidor":"horas"},{"id":"recm7XKFx8Cw9WDDY","codigo":"V-401","tipo":"Camión","marca":"Freightliner","modelo":"Cascadia","fincaId":"recQHY85mAvvcf1kD","fincaNombre":"El Parque","laborId":"recMH3MK24nQpHnSL","laborNombre":"Transporte","disponibilidad":"Disponible","horometro":929259.9,"otAbierta":false,"medidor":"Kilometraje"},{"id":"recmNZA0r65S6gHJw","codigo":"V-05","tipo":"Camión","marca":"Izusu","modelo":"NPR","fincaId":"recaiF7SVqHCWnfQR","fincaNombre":"Piedra Alegre","laborId":"recMH3MK24nQpHnSL","laborNombre":"Transporte","disponibilidad":"Disponible","horometro":null,"otAbierta":false,"medidor":"Kilometraje"},{"id":"recn6F7LGHMS5nH1c","codigo":"T-40","tipo":"Tractor Agricola","marca":"Landini","modelo":"PF 110","fincaId":"recaiF7SVqHCWnfQR","fincaNombre":"Piedra Alegre","laborId":"recvrSE86WZmgBXZl","laborNombre":"Cosecha","disponibilidad":"Disponible","horometro":2076.9,"otAbierta":false,"medidor":"horas"},{"id":"recnYh5QaxKVQNzEm","codigo":"EX-11","tipo":"Excavadora","marca":"Develon","modelo":"DX220","fincaId":"recaiF7SVqHCWnfQR","fincaNombre":"Piedra Alegre","laborId":"recrihBeLsL5mFplL","laborNombre":"Preparación","disponibilidad":"Disponible","horometro":216,"otAbierta":true,"medidor":"horas"},{"id":"recoDQ49wBXg8pqLw","codigo":"T-415","tipo":"Tractor Agricola","marca":"Same","modelo":"Explorer 3 115 E","fincaId":"recQHY85mAvvcf1kD","fincaNombre":"El Parque","laborId":"recvrSE86WZmgBXZl","laborNombre":"Cosecha","disponibilidad":"Disponible","horometro":511.5,"otAbierta":false,"medidor":"horas"},{"id":"recoNXpL1GWoRfuCm","codigo":"M-16","tipo":"Motocicleta","marca":"Honda","modelo":"XR 190 CT","fincaId":"recaiF7SVqHCWnfQR","fincaNombre":"Piedra Alegre","laborId":"recMH3MK24nQpHnSL","laborNombre":"Transporte","disponibilidad":"Disponible","horometro":40160.6,"otAbierta":false,"medidor":"Kilometraje"},{"id":"recomIl2dqpsweVq6","codigo":"V-27","tipo":"PickUp","marca":"Toyota","modelo":"Hilux","fincaId":"recaiF7SVqHCWnfQR","fincaNombre":"Piedra Alegre","laborId":"recMH3MK24nQpHnSL","laborNombre":"Transporte","disponibilidad":"Disponible","horometro":5376,"otAbierta":false,"medidor":"Kilometraje"},{"id":"recoyuGhhdA6l3Ngr","codigo":"M-21","tipo":"Motocicleta","marca":"Honda","modelo":"XR 190 CT","fincaId":"recgsy0odqXWTcNPY","fincaNombre":"Rio Cuarto","laborId":"recMH3MK24nQpHnSL","laborNombre":"Transporte","disponibilidad":"Disponible","horometro":52259.6,"otAbierta":false,"medidor":"Kilometraje"},{"id":"recpjJE4u4T4B5Ito","codigo":"C-234","tipo":"Carreta","marca":"","modelo":"","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":null,"laborNombre":"Sin Labor","disponibilidad":"Disponible","horometro":null,"otAbierta":false,"medidor":"Kilometraje"},{"id":"recqFdsX5MLXGkNx7","codigo":"T-61","tipo":"Tractor Agricola","marca":"John Deere","modelo":"6105J","fincaId":"recaiF7SVqHCWnfQR","fincaNombre":"Piedra Alegre","laborId":"recvrSE86WZmgBXZl","laborNombre":"Cosecha","disponibilidad":"Disponible","horometro":1360.6,"otAbierta":false,"medidor":"horas"},{"id":"recqHax7TYhQWENdf","codigo":"T-62","tipo":"Tractor Agricola","marca":"John Deere","modelo":"6105J","fincaId":"recaiF7SVqHCWnfQR","fincaNombre":"Piedra Alegre","laborId":"recvrSE86WZmgBXZl","laborNombre":"Cosecha","disponibilidad":"Disponible","horometro":1488.9,"otAbierta":false,"medidor":"horas"},{"id":"recqzSgOk7ZgcTVL6","codigo":"T-226","tipo":"Tractor Agricola","marca":"Landini","modelo":"LP 150","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"recrihBeLsL5mFplL","laborNombre":"Preparación","disponibilidad":"Disponible","horometro":9927.7,"otAbierta":false,"medidor":"horas"},{"id":"recrQUnX9kKdSaF8v","codigo":"M-29","tipo":"Motocicleta","marca":"Honda","modelo":"XR 150 LS","fincaId":"recaiF7SVqHCWnfQR","fincaNombre":"Piedra Alegre","laborId":"recMH3MK24nQpHnSL","laborNombre":"Transporte","disponibilidad":"Disponible","horometro":844,"otAbierta":false,"medidor":"Kilometraje"},{"id":"recrRTFygMAhAx63K","codigo":"EX-08","tipo":"Mini Excavadora","marca":"Case","modelo":"CX57C","fincaId":"recaiF7SVqHCWnfQR","fincaNombre":"Piedra Alegre","laborId":"recrihBeLsL5mFplL","laborNombre":"Preparación","disponibilidad":"Disponible","horometro":5835.5,"otAbierta":false,"medidor":"horas"},{"id":"recrjGgfbgBDn3kEM","codigo":"T-227","tipo":"Tractor Agricola","marca":"Landini","modelo":"5-115H","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"recvrSE86WZmgBXZl","laborNombre":"Cosecha","disponibilidad":"Disponible","horometro":8575.88,"otAbierta":false,"medidor":"horas"},{"id":"recrqDBLeX6VEVBdi","codigo":"M-19","tipo":"Motocicleta","marca":"Honda","modelo":"XR 190 CT","fincaId":"recaiF7SVqHCWnfQR","fincaNombre":"Piedra Alegre","laborId":"recMH3MK24nQpHnSL","laborNombre":"Transporte","disponibilidad":"Disponible","horometro":11972.5,"otAbierta":false,"medidor":"Kilometraje"},{"id":"recrsIlVoHrd6PmcJ","codigo":"T-58","tipo":"Tractor Agricola","marca":"John Deere","modelo":"6105J","fincaId":"recaiF7SVqHCWnfQR","fincaNombre":"Piedra Alegre","laborId":"recvrSE86WZmgBXZl","laborNombre":"Cosecha","disponibilidad":"Disponible","horometro":1562.4,"otAbierta":true,"medidor":"horas"},{"id":"recsSV6nWaa1NLTl4","codigo":"T-63","tipo":"Tractor Agricola","marca":"John Deere","modelo":"6105J","fincaId":"recaiF7SVqHCWnfQR","fincaNombre":"Piedra Alegre","laborId":"recvrSE86WZmgBXZl","laborNombre":"Cosecha","disponibilidad":"Disponible","horometro":1371.7,"otAbierta":false,"medidor":"horas"},{"id":"recsZvsVajXbFchmx","codigo":"LV-T-02","tipo":"Tractor Agricola","marca":"Lovol","modelo":"P4110","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"recvrSE86WZmgBXZl","laborNombre":"Cosecha","disponibilidad":"Disponible","horometro":154.3,"otAbierta":false,"medidor":"horas"},{"id":"recsgVQvCB8UkOWSr","codigo":"V-402","tipo":"PickUp","marca":"Nissan","modelo":"Frontier","fincaId":"recQHY85mAvvcf1kD","fincaNombre":"El Parque","laborId":"recMH3MK24nQpHnSL","laborNombre":"Transporte","disponibilidad":"Disponible","horometro":9537,"otAbierta":false,"medidor":"Kilometraje"},{"id":"recsqiatjRYg7nJLT","codigo":"T-230","tipo":"Tractor Agricola","marca":"Landini","modelo":"5-115H","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"recvrSE86WZmgBXZl","laborNombre":"Cosecha","disponibilidad":"Disponible","horometro":7913.6,"otAbierta":false,"medidor":"horas"},{"id":"recswgbe71rZLfWJ5","codigo":"V-14","tipo":"PickUp","marca":"Mitsubishi","modelo":"L200","fincaId":"recaiF7SVqHCWnfQR","fincaNombre":"Piedra Alegre","laborId":"rechuILWIfByvwJaE","laborNombre":"Taller","disponibilidad":"Disponible","horometro":138062,"otAbierta":false,"medidor":"Kilometraje"},{"id":"rectY8or9jA4H6Ty9","codigo":"T-19","tipo":"Tractor Agricola","marca":"Landini","modelo":"GF 100","fincaId":"recaiF7SVqHCWnfQR","fincaNombre":"Piedra Alegre","laborId":"recvrSE86WZmgBXZl","laborNombre":"Cosecha","disponibilidad":"Disponible","horometro":41943.8,"otAbierta":false,"medidor":"horas"},{"id":"rectYuuyH0JTVJetM","codigo":"TO-04","tipo":"Tractor Oruga","marca":"Komatsu","modelo":"D39PX-23","fincaId":"recQHY85mAvvcf1kD","fincaNombre":"El Parque","laborId":"recrihBeLsL5mFplL","laborNombre":"Preparación","disponibilidad":"No Disponible","horometro":12381.2,"otAbierta":false,"medidor":"horas"},{"id":"rectaAcZDfvO6kGjd","codigo":"EX-202","tipo":"Mini Excavadora","marca":"Caterpillar","modelo":"307 E","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"recrihBeLsL5mFplL","laborNombre":"Preparación","disponibilidad":"Disponible","horometro":4596.4,"otAbierta":false,"medidor":"horas"},{"id":"rectbO4Ur71IKQ0Nw","codigo":"T-55","tipo":"Tractor Agricola","marca":"John Deere","modelo":"6125M","fincaId":"recaiF7SVqHCWnfQR","fincaNombre":"Piedra Alegre","laborId":"recrihBeLsL5mFplL","laborNombre":"Preparación","disponibilidad":"Disponible","horometro":2408,"otAbierta":false,"medidor":"horas"},{"id":"rectmK6wr0SjjJWRb","codigo":"EX-04","tipo":"Mini Excavadora","marca":"Caterpillar","modelo":"306 C","fincaId":"recgsy0odqXWTcNPY","fincaNombre":"Rio Cuarto","laborId":"recrihBeLsL5mFplL","laborNombre":"Preparación","disponibilidad":"Disponible","horometro":726.2,"otAbierta":false,"medidor":"horas"},{"id":"rectoPaCvl33Jyrs2","codigo":"T-403","tipo":"Tractor Agricola","marca":"Same","modelo":"Explorer 3 115 E","fincaId":"recQHY85mAvvcf1kD","fincaNombre":"El Parque","laborId":"recnhBNyQvnrKFHuy","laborNombre":"Semilla","disponibilidad":"Disponible","horometro":3292.4,"otAbierta":false,"medidor":"horas"},{"id":"rectwTSIo5kt3RhX5","codigo":"T-225","tipo":"Tractor Agricola","marca":"Case","modelo":"PUMA 155","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"recI35SPIrUynpSYm","laborNombre":"Aplicaciones","disponibilidad":"Disponible","horometro":14120.1,"otAbierta":false,"medidor":"horas"},{"id":"recuWuedsoiQ0TvtO","codigo":"T-48","tipo":"Tractor Agricola","marca":"Case","modelo":"MAXXUM 125","fincaId":"recaiF7SVqHCWnfQR","fincaNombre":"Piedra Alegre","laborId":"recnhBNyQvnrKFHuy","laborNombre":"Semilla","disponibilidad":"No Disponible","horometro":11147,"otAbierta":false,"medidor":"horas"},{"id":"reculZNvg1MMkaAbT","codigo":"T-32","tipo":"Tractor Agricola","marca":"Landini","modelo":"LP DT 125","fincaId":"recgsy0odqXWTcNPY","fincaNombre":"Rio Cuarto","laborId":"recvrSE86WZmgBXZl","laborNombre":"Cosecha","disponibilidad":"Disponible","horometro":417.5,"otAbierta":false,"medidor":"horas"},{"id":"recv1rG4QwrySq7Dc","codigo":"V-214","tipo":"PickUp","marca":"Toyota","modelo":"Hilux","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"recMH3MK24nQpHnSL","laborNombre":"Transporte","disponibilidad":"Disponible","horometro":7819,"otAbierta":false,"medidor":"Kilometraje"},{"id":"recvUKUF2zSJv4lWp","codigo":"V-211","tipo":"PickUp","marca":"Nissan","modelo":"Frontier","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"recMH3MK24nQpHnSL","laborNombre":"Transporte","disponibilidad":"Disponible","horometro":21752,"otAbierta":false,"medidor":"Kilometraje"},{"id":"recvVWluCsMZupK0W","codigo":"V-212","tipo":"PickUp","marca":"Nissan","modelo":"Frontier","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"recMH3MK24nQpHnSL","laborNombre":"Transporte","disponibilidad":"Disponible","horometro":6417,"otAbierta":false,"medidor":"Kilometraje"},{"id":"recwAqSDA8pUciTde","codigo":"M-23","tipo":"Motocicleta","marca":"Honda","modelo":"XR 190 CT","fincaId":"recgsy0odqXWTcNPY","fincaNombre":"Rio Cuarto","laborId":"recMH3MK24nQpHnSL","laborNombre":"Transporte","disponibilidad":"Disponible","horometro":25313,"otAbierta":false,"medidor":"Kilometraje"},{"id":"recwLiKIXswvI9xpJ","codigo":"T-229","tipo":"Tractor Agricola","marca":"Landini","modelo":"5-115H","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"recvrSE86WZmgBXZl","laborNombre":"Cosecha","disponibilidad":"Disponible","horometro":7707.3,"otAbierta":true,"medidor":"horas"},{"id":"recwT170R63dczeRQ","codigo":"T-35","tipo":"Tractor Agricola","marca":"Landini","modelo":"LP 125","fincaId":"recaiF7SVqHCWnfQR","fincaNombre":"Piedra Alegre","laborId":"recqtPRXXIpsjRNh2","laborNombre":"Tanquetero","disponibilidad":"Disponible","horometro":6171,"otAbierta":false,"medidor":"horas"},{"id":"recwUBDVgO9r7CWWT","codigo":"V-23","tipo":"PickUp","marca":"Toyota","modelo":"Hilux","fincaId":"recgsy0odqXWTcNPY","fincaNombre":"Rio Cuarto","laborId":"recMH3MK24nQpHnSL","laborNombre":"Transporte","disponibilidad":"Disponible","horometro":42779,"otAbierta":false,"medidor":"Kilometraje"},{"id":"recwb7T12uER6eVt0","codigo":"V-04","tipo":"PickUp","marca":"Mitsubishi","modelo":"L200","fincaId":"recaiF7SVqHCWnfQR","fincaNombre":"Piedra Alegre","laborId":"recMH3MK24nQpHnSL","laborNombre":"Transporte","disponibilidad":"Disponible","horometro":394162,"otAbierta":false,"medidor":"Kilometraje"},{"id":"recwoGCxSmWAKZcAf","codigo":"V-24","tipo":"PickUp","marca":"Toyota","modelo":"Hilux","fincaId":"recaiF7SVqHCWnfQR","fincaNombre":"Piedra Alegre","laborId":"recMH3MK24nQpHnSL","laborNombre":"Transporte","disponibilidad":"Disponible","horometro":71283,"otAbierta":true,"medidor":"Kilometraje"},{"id":"recwtIFJIgEAHSSrK","codigo":"T-33","tipo":"Tractor Agricola","marca":"Landini","modelo":"LP DT 125","fincaId":"recaiF7SVqHCWnfQR","fincaNombre":"Piedra Alegre","laborId":"recqtPRXXIpsjRNh2","laborNombre":"Tanquetero","disponibilidad":"No Disponible","horometro":16061.8,"otAbierta":false,"medidor":"horas"},{"id":"recxA8GJ3yfdGva7m","codigo":"EX-06","tipo":"Excavadora","marca":"Hyundai","modelo":"R220LC-9S","fincaId":"recQHY85mAvvcf1kD","fincaNombre":"El Parque","laborId":"recrihBeLsL5mFplL","laborNombre":"Preparación","disponibilidad":"Disponible","horometro":8001.1,"otAbierta":false,"medidor":"horas"},{"id":"recxByQRH23yUW7wl","codigo":"T-239","tipo":"Tractor Agricola","marca":"Same","modelo":"Explorer 3 115 E","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"recvrSE86WZmgBXZl","laborNombre":"Cosecha","disponibilidad":"Disponible","horometro":7668.2,"otAbierta":false,"medidor":"horas"},{"id":"recxrgLMqHbh286q6","codigo":"T-29","tipo":"Tractor Agricola","marca":"Landini","modelo":"LP 145","fincaId":"recaiF7SVqHCWnfQR","fincaNombre":"Piedra Alegre","laborId":"recrihBeLsL5mFplL","laborNombre":"Preparación","disponibilidad":"Disponible","horometro":11420.5,"otAbierta":false,"medidor":"horas"},{"id":"recy5t6wc8c8mGEn2","codigo":"V-209","tipo":"Camión","marca":"Kenworth","modelo":"T 660","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"recMH3MK24nQpHnSL","laborNombre":"Transporte","disponibilidad":"Disponible","horometro":952338,"otAbierta":false,"medidor":"Kilometraje"},{"id":"recyERLVb1GOr2SGn","codigo":"T-231","tipo":"Tractor Agricola","marca":"Landini","modelo":"LF 120","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"recrihBeLsL5mFplL","laborNombre":"Preparación","disponibilidad":"No Disponible","horometro":9233.5,"otAbierta":false,"medidor":"horas"},{"id":"recyIwrC4KTQ81uit","codigo":"TO-01","tipo":"Tractor Oruga","marca":"John Deere","modelo":"450J","fincaId":"recaiF7SVqHCWnfQR","fincaNombre":"Piedra Alegre","laborId":"recrihBeLsL5mFplL","laborNombre":"Preparación","disponibilidad":"No Disponible","horometro":20262.3,"otAbierta":true,"medidor":"horas"},{"id":"recyPcBf8d5FdiMwM","codigo":"T-45","tipo":"Tractor Agricola","marca":"Landini","modelo":"PF 110","fincaId":"recgsy0odqXWTcNPY","fincaNombre":"Rio Cuarto","laborId":"recvrSE86WZmgBXZl","laborNombre":"Cosecha","disponibilidad":"Disponible","horometro":2861.5,"otAbierta":false,"medidor":"horas"},{"id":"recyeDvRq5hno4FgU","codigo":"T-60","tipo":"Tractor Agricola","marca":"John Deere","modelo":"6105J","fincaId":"recaiF7SVqHCWnfQR","fincaNombre":"Piedra Alegre","laborId":"recvrSE86WZmgBXZl","laborNombre":"Cosecha","disponibilidad":"Disponible","horometro":1550.2,"otAbierta":true,"medidor":"horas"},{"id":"recyrJpbW9QjGsCLJ","codigo":"V-207","tipo":"Camión","marca":"JMC","modelo":"JMC","fincaId":"recw5LT8E71L2iXWL","fincaNombre":"Santa Rosa","laborId":"recMH3MK24nQpHnSL","laborNombre":"Transporte","disponibilidad":"Disponible","horometro":137777,"otAbierta":false,"medidor":"Kilometraje"},{"id":"recyySsxw5BPLbkCm","codigo":"V-26","tipo":"PickUp","marca":"Toyota","modelo":"Hilux","fincaId":"recaiF7SVqHCWnfQR","fincaNombre":"Piedra Alegre","laborId":"recMH3MK24nQpHnSL","laborNombre":"Transporte","disponibilidad":"Disponible","horometro":40246,"otAbierta":false,"medidor":"Kilometraje"},{"id":"reczbxacRYvaMq5Do","codigo":"A-04","tipo":"Camión","marca":"Militar","modelo":"Harsco","fincaId":"recaiF7SVqHCWnfQR","fincaNombre":"Piedra Alegre","laborId":"recqtPRXXIpsjRNh2","laborNombre":"Tanquetero","disponibilidad":"Disponible","horometro":10896.2,"otAbierta":false,"medidor":"horas"},{"id":"reczt3sFFRndd3GNL","codigo":"T-411","tipo":"Tractor Agricola","marca":"Same","modelo":"Explorer 3 115 E","fincaId":"recQHY85mAvvcf1kD","fincaNombre":"El Parque","laborId":"recvrSE86WZmgBXZl","laborNombre":"Cosecha","disponibilidad":"Disponible","horometro":861.4,"otAbierta":false,"medidor":"horas"}]};
+  </script>
+
+  <!-- Application Logic -->
+  <script>
+    // State
+    let currentEquipos = [...INITIAL_DATA.equipos];
+    const LABORES = INITIAL_DATA.labores;
+    const FINCAS = INITIAL_DATA.fincas;
+
+    let selectedFinca = 'ALL';
+    let selectedType = 'ALL';
+    let selectedDisp = 'ALL';
+    let searchQuery = '';
+    let selectedEquipment = null;
+    let draggedEquipmentId = null;
+
+    // Specialized SVG equipment icons
+    const SVG_EXCAVADORA = `<svg class="eq-icon svg-excavator" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="16" width="11" height="5" rx="2.5"/><circle cx="4.5" cy="18.5" r="0.8" fill="currentColor"/><circle cx="7.5" cy="18.5" r="0.8" fill="currentColor"/><circle cx="10.5" cy="18.5" r="0.8" fill="currentColor"/><path d="M3 16V9.5a1 1 0 0 1 1-1h4l3 3.5V16"/><path d="M5.5 10.5h2v2.5h-2z" stroke-width="1.2"/><path d="M10 12l5-8.5" stroke-width="2.2"/><path d="M15 3.5l4.5 7" stroke-width="2.2"/><path d="M19.5 10.5c.8 2.2-1.2 4-3.5 3.2l1-4z" fill="currentColor" fill-opacity="0.25" stroke-width="1.5"/></svg>`;
+
+    const SVG_MONTACARGA = `<svg class="eq-icon svg-forklift" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="18" r="2.2"/><circle cx="15" cy="18" r="2.2"/><path d="M8.2 18h4.6"/><path d="M3 15v1a2.2 2.2 0 0 0 2.2 2.2h.6"/><path d="M3 14h13.5"/><path d="M5 14V7.5a1 1 0 0 1 1-1h5.5l2.5 4.5v3"/><line x1="5" y1="6.5" x2="11.5" y2="6.5" stroke-width="2"/><circle cx="7.5" cy="10" r="0.8" fill="currentColor"/><line x1="18" y1="3" x2="18" y2="19" stroke-width="2.2"/><path d="M18 13.5h2v5h3.5" stroke-width="2"/></svg>`;
+
+    // Type icons dictionary
+    const TYPE_ICONS = {
+      'Tractor Agricola': '🚜',
+      'Tractor Oruga': '🚜',
+      'Excavadora': SVG_EXCAVADORA,
+      'Mini Excavadora': SVG_EXCAVADORA,
+      'RetroExcavador': SVG_EXCAVADORA,
+      'Cosechadora': '🌾',
+      'Niveladora': '🚜',
+      'Minicargador': '🚜',
+      'Cargadores Frontales': '🚜',
+      'Camión': '🚛',
+      'PickUp': '🛻',
+      'Montacarga': SVG_MONTACARGA,
+      'Motocicleta': '🏍️',
+      'Carreta': '🛒',
+      'Implemento': '⚙️',
+      'Otro': '🚜'
+    };
+
+    // Preferred order of types
+    const TYPE_PRIORITY = [
+      'Tractor Agricola',
+      'Tractor Oruga',
+      'Excavadora',
+      'Mini Excavadora',
+      'RetroExcavador',
+      'Camión',
+      'PickUp',
+      'Montacarga',
+      'Motocicleta',
+      'Cosechadora',
+      'Carreta'
+    ];
+
+    // Local Storage for config
+    let syncMode = localStorage.getItem('smartfleet_sync_mode') || 'offline';
+    let webhookUrl = localStorage.getItem('smartfleet_webhook_url') || '';
+    let patToken = localStorage.getItem('smartfleet_pat') || '';
+
+    // Check URL parameters for token or webhook
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('token')) {
+      patToken = urlParams.get('token');
+      syncMode = 'airtable';
+    }
+    if (urlParams.get('webhook')) {
+      webhookUrl = urlParams.get('webhook');
+      syncMode = 'n8n';
+    }
+
+    // Elements
+    const boardContainer = document.getElementById('board-container');
+    const searchInput = document.getElementById('search-input');
+    const fincasFilterContainer = document.getElementById('fincas-filter-container');
+    const typeFilterContainer = document.getElementById('type-filter-container');
+    const dispFilterContainer = document.getElementById('disp-filter-container');
+
+    // Modals
+    const equipmentModal = document.getElementById('equipment-modal');
+    const syncModal = document.getElementById('sync-modal');
+    const modalCode = document.getElementById('modal-code');
+    const modalType = document.getElementById('modal-type');
+    const modalLed = document.getElementById('modal-led');
+    const modalBrandModel = document.getElementById('modal-brand-model');
+    const modalDispStatus = document.getElementById('modal-disp-status');
+    const modalFinca = document.getElementById('modal-finca');
+    const modalHorometro = document.getElementById('modal-horometro');
+    const modalLaborCurrent = document.getElementById('modal-labor-current');
+    const modalLaborSelect = document.getElementById('modal-labor-select');
+    const modalFincaSelect = document.getElementById('modal-finca-select');
+    const modalAirtableLink = document.getElementById('modal-airtable-link');
+
+    // Initialize App
+    function init() {
+      setupFilterListeners();
+      setupModalListeners();
+      setupSyncListeners();
+      renderBoard();
+      updateKPISummary();
+    }
+
+    // Filter Listeners
+    function setupFilterListeners() {
+      searchInput.addEventListener('input', (e) => {
+        searchQuery = e.target.value.toLowerCase().trim();
+        renderBoard();
+      });
+
+      fincasFilterContainer.addEventListener('click', (e) => {
+        const btn = e.target.closest('.filter-pill');
+        if (!btn) return;
+        fincasFilterContainer.querySelectorAll('.filter-pill').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        selectedFinca = btn.dataset.finca;
+        renderBoard();
+      });
+
+      typeFilterContainer.addEventListener('click', (e) => {
+        const btn = e.target.closest('.filter-pill');
+        if (!btn) return;
+        typeFilterContainer.querySelectorAll('.filter-pill').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        selectedType = btn.dataset.type;
+        renderBoard();
+      });
+
+      dispFilterContainer.addEventListener('click', (e) => {
+        const btn = e.target.closest('.filter-pill');
+        if (!btn) return;
+        dispFilterContainer.querySelectorAll('.filter-pill').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        selectedDisp = btn.dataset.disp;
+        renderBoard();
+      });
+
+      document.getElementById('btn-refresh').addEventListener('click', () => {
+        renderBoard();
+        showToast('Estado de flota refrescado');
+      });
+    }
+
+    // Setup Modals
+    function setupModalListeners() {
+      document.getElementById('btn-close-modal').addEventListener('click', () => {
+        equipmentModal.classList.remove('active');
+      });
+      document.getElementById('btn-close-sync').addEventListener('click', () => {
+        syncModal.classList.remove('active');
+      });
+      document.getElementById('btn-open-sync').addEventListener('click', () => {
+        document.getElementById('sync-mode-select').value = syncMode;
+        document.getElementById('webhook-url-input').value = webhookUrl;
+        document.getElementById('pat-input').value = patToken;
+        toggleSyncFields(syncMode);
+        syncModal.classList.add('active');
+      });
+
+      document.getElementById('btn-save-reassignment').addEventListener('click', () => {
+        if (!selectedEquipment) return;
+        const newLaborId = modalLaborSelect.value;
+        const newFincaId = modalFincaSelect.value;
+        reassignEquipment(selectedEquipment.id, newLaborId, newFincaId);
+        equipmentModal.classList.remove('active');
+      });
+    }
+
+    function setupSyncListeners() {
+      const modeSelect = document.getElementById('sync-mode-select');
+      modeSelect.addEventListener('change', (e) => toggleSyncFields(e.target.value));
+
+      document.getElementById('btn-save-sync').addEventListener('click', () => {
+        syncMode = modeSelect.value;
+        webhookUrl = document.getElementById('webhook-url-input').value.trim();
+        patToken = document.getElementById('pat-input').value.trim();
+
+        localStorage.setItem('smartfleet_sync_mode', syncMode);
+        localStorage.setItem('smartfleet_webhook_url', webhookUrl);
+        localStorage.setItem('smartfleet_pat', patToken);
+
+        syncModal.classList.remove('active');
+        showToast('Configuración de sincronización guardada');
+      });
+    }
+
+    function toggleSyncFields(mode) {
+      document.getElementById('grp-webhook').style.display = mode === 'n8n' ? 'flex' : 'none';
+      document.getElementById('grp-token').style.display = mode === 'airtable' ? 'flex' : 'none';
+    }
+
+    let allSubgroupsCollapsed = false;
+
+    // Toggle Single Subgroup Collapse
+    window.toggleSubgroup = function(headerElem) {
+      const subgroup = headerElem.closest('.type-subgroup');
+      if (subgroup) {
+        subgroup.classList.toggle('collapsed');
+      }
+    };
+
+    // Toggle All Subgroups Collapse/Expand
+    window.toggleAllSubgroups = function() {
+      allSubgroupsCollapsed = !allSubgroupsCollapsed;
+      const subgroups = document.querySelectorAll('.type-subgroup');
+      subgroups.forEach(sg => {
+        if (allSubgroupsCollapsed) sg.classList.add('collapsed');
+        else sg.classList.remove('collapsed');
+      });
+      const btn = document.getElementById('btn-toggle-subgroups');
+      if (btn) {
+        btn.innerHTML = allSubgroupsCollapsed ? '📂 Expandir Tipos' : '📁 Colapsar Tipos';
+      }
+    };
+
+    // Render Board: Grouped by Labor, then by Tipo de Equipo
+    function renderBoard() {
+      boardContainer.innerHTML = '';
+
+      const allLaborColumns = [...LABORES, { id: 'sin_labor', nombre: 'Sin Labor', icon: '❓', color: '#64748b' }];
+
+      allLaborColumns.forEach(labor => {
+        // Filter equipment for this labor
+        const equipList = currentEquipos.filter(eq => {
+          const matchLabor = labor.id === 'sin_labor' ? (!eq.laborId || eq.laborId === 'sin_labor') : eq.laborId === labor.id;
+          if (!matchLabor) return false;
+
+          // Finca Filter
+          if (selectedFinca !== 'ALL' && eq.fincaId !== selectedFinca) return false;
+
+          // Type Filter
+          if (selectedType !== 'ALL') {
+            if (selectedType === 'Mini Excavadora') {
+              if (eq.tipo !== 'Mini Excavadora' && eq.tipo !== 'Excavadora') return false;
+            } else if (eq.tipo !== selectedType) {
+              return false;
+            }
+          }
+
+          // Availability Filter
+          if (selectedDisp !== 'ALL' && eq.disponibilidad !== selectedDisp) return false;
+
+          // Search Filter
+          if (searchQuery) {
+            const txt = (eq.codigo + ' ' + eq.marca + ' ' + eq.modelo + ' ' + eq.tipo + ' ' + eq.fincaNombre).toLowerCase();
+            if (!txt.includes(searchQuery)) return false;
+          }
+
+          return true;
+        });
+
+        // Hide "Sin Labor" if empty
+        if (labor.id === 'sin_labor' && equipList.length === 0) return;
+
+        // Health metrics for this labor column
+        const total = equipList.length;
+        const dispCount = equipList.filter(e => e.disponibilidad === 'Disponible').length;
+        const noDispCount = total - dispCount;
+        const dispRate = total > 0 ? Math.round((dispCount / total) * 100) : 0;
+
+        // Health row HTML
+        let healthRowHtml = '';
+        if (total > 0) {
+          healthRowHtml = `
+            <div class="column-health-row">
+              <div class="health-meter-wrap">
+                <div class="health-track" title="${dispCount} disponibles (${dispRate}%), ${noDispCount} en taller">
+                  <div class="health-fill-disp" style="width: ${dispRate}%;"></div>
+                  <div class="health-fill-nodisp" style="width: ${100 - dispRate}%;"></div>
+                </div>
+              </div>
+              <span class="health-stats-text">${dispCount}/${total} disp. <strong style="color: ${dispRate >= 80 ? '#34d399' : '#f87171'};">(${dispRate}%)</strong></span>
+            </div>
+          `;
+        } else {
+          healthRowHtml = `
+            <div class="column-health-row">
+              <span class="health-empty-label">0 equipos activos</span>
+            </div>
+          `;
+        }
+
+        // Subgroup equipment by Tipo de Equipo
+        const groupedByType = {};
+        equipList.forEach(eq => {
+          const t = eq.tipo || 'Otro';
+          if (!groupedByType[t]) groupedByType[t] = [];
+          groupedByType[t].push(eq);
+        });
+
+        // Sort types by priority list
+        const sortedTypes = Object.keys(groupedByType).sort((a, b) => {
+          const idxA = TYPE_PRIORITY.indexOf(a);
+          const idxB = TYPE_PRIORITY.indexOf(b);
+          if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+          if (idxA !== -1) return -1;
+          if (idxB !== -1) return 1;
+          return a.localeCompare(b);
+        });
+
+        const col = document.createElement('div');
+        col.className = 'labor-column';
+        col.dataset.laborId = labor.id;
+
+        // Generate Subgroups HTML
+        let subgroupsHtml = '';
+        if (sortedTypes.length === 0) {
+          subgroupsHtml = `
+            <div class="empty-dropzone">
+              <span class="empty-dropzone-icon">${labor.icon}</span>
+              <span class="empty-dropzone-title">Sin equipos en ${labor.nombre}</span>
+              <span class="empty-dropzone-desc">Arrastra maquinaria aquí para reasignar</span>
+            </div>
+          `;
+        } else {
+          sortedTypes.forEach(typeName => {
+            const items = groupedByType[typeName];
+            const icon = TYPE_ICONS[typeName] || '🚜';
+
+            subgroupsHtml += `
+              <div class="type-subgroup ${allSubgroupsCollapsed ? 'collapsed' : ''}" data-type="${typeName}">
+                <div class="type-subgroup-header" onclick="toggleSubgroup(this)">
+                  <div class="type-title">
+                    <span class="type-icon">${icon}</span>
+                    <span class="type-name">${typeName}</span>
+                  </div>
+                  <div class="type-meta">
+                    <span class="type-count-badge">${items.length}</span>
+                    <span class="type-chevron">▾</span>
+                  </div>
+                </div>
+                <div class="type-cards-list">
+                  ${items.map(eq => createCardHtml(eq)).join('')}
+                </div>
+              </div>
+            `;
+          });
+        }
+
+        col.innerHTML = `
+          <div class="column-accent-line" style="background: ${labor.color || '#64748b'};"></div>
+          <div class="column-header">
+            <div class="column-title-row">
+              <div class="column-title-left">
+                <span class="labor-icon-badge" style="background: ${labor.color}18; color: ${labor.color}; border: 1px solid ${labor.color}35;">
+                  ${labor.icon}
+                </span>
+                <span class="labor-name">${labor.nombre}</span>
+              </div>
+              <span class="column-count-chip ${total === 0 ? 'zero' : ''}" style="${total > 0 ? `background: ${labor.color}15; color: ${labor.color}; border-color: ${labor.color}35;` : ''}">
+                ${total}
+              </span>
+            </div>
+            ${healthRowHtml}
+          </div>
+          <div class="cards-dropzone" data-labor-id="${labor.id}">
+            ${subgroupsHtml}
+          </div>
+        `;
+
+        boardContainer.appendChild(col);
+      });
+
+      setupDragAndDrop();
+      updateKPISummary();
+    }
+
+    function createCardHtml(eq) {
+      const isOnline = eq.disponibilidad === 'Disponible';
+      const horoStr = eq.horometro ? Math.round(eq.horometro).toLocaleString() + (eq.medidor && eq.medidor.toLowerCase().startsWith('k') ? ' km' : ' h') : 'Sin dato';
+      const typeIcon = TYPE_ICONS[eq.tipo] || '🚜';
+
+      return `
+        <div class="equipment-card" draggable="true" data-id="${eq.id}" data-labor-id="${eq.laborId || 'sin_labor'}">
+          <div class="card-top-row">
+            <div class="card-code-wrapper">
+              <div class="status-led ${isOnline ? 'led-online' : 'led-offline'}" title="${eq.disponibilidad}"></div>
+              <span class="card-code">${eq.codigo}</span>
+            </div>
+            <div class="card-badges-right">
+              <span class="badge-finca">${eq.fincaNombre}</span>
+            </div>
+          </div>
+
+          <div class="card-model-row">
+            <span class="card-specs" title="${eq.marca} ${eq.modelo}">${typeIcon} ${eq.marca} ${eq.modelo}</span>
+            <span class="card-horometro">⏱️ ${horoStr}</span>
+          </div>
+
+          <div class="card-footer-row">
+            <span class="status-tag ${isOnline ? 'tag-disp' : 'tag-nodisp'}">${eq.disponibilidad}</span>
+            <button class="btn-card-menu" title="Ver ficha y reasignar" onclick="openEquipmentModal('${eq.id}')">⋮</button>
+          </div>
+        </div>
+      `;
+    }
+
+    // Drag and Drop
+    function setupDragAndDrop() {
+      const cards = document.querySelectorAll('.equipment-card');
+      const columns = document.querySelectorAll('.labor-column');
+
+      cards.forEach(card => {
+        card.addEventListener('dragstart', (e) => {
+          draggedEquipmentId = card.dataset.id;
+          card.classList.add('is-dragging');
+          e.dataTransfer.setData('text/plain', card.dataset.id);
+          e.dataTransfer.effectAllowed = 'move';
+        });
+
+        card.addEventListener('dragend', () => {
+          card.classList.remove('is-dragging');
+          document.querySelectorAll('.labor-column').forEach(c => c.classList.remove('drag-target'));
+        });
+      });
+
+      columns.forEach(col => {
+        col.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = 'move';
+          col.classList.add('drag-target');
+        });
+
+        col.addEventListener('dragleave', (e) => {
+          if (!col.contains(e.relatedTarget)) {
+            col.classList.remove('drag-target');
+          }
+        });
+
+        col.addEventListener('drop', (e) => {
+          e.preventDefault();
+          col.classList.remove('drag-target');
+
+          const equipId = e.dataTransfer.getData('text/plain') || draggedEquipmentId;
+          const targetLaborId = col.dataset.laborId;
+
+          if (equipId && targetLaborId) {
+            reassignEquipment(equipId, targetLaborId);
+          }
+        });
+      });
+    }
+
+    // Reassign Equipment
+    function reassignEquipment(equipId, newLaborId, newFincaId = null) {
+      const eq = currentEquipos.find(e => e.id === equipId);
+      if (!eq) return;
+
+      const oldLaborId = eq.laborId;
+      if (oldLaborId === newLaborId && (!newFincaId || newFincaId === eq.fincaId)) return;
+
+      const targetLabor = LABORES.find(l => l.id === newLaborId) || { nombre: 'Sin Labor' };
+      const targetFinca = newFincaId ? FINCAS.find(f => f.id === newFincaId) : null;
+
+      // Optimistic update
+      eq.laborId = newLaborId;
+      eq.laborNombre = targetLabor.nombre;
+      if (targetFinca) {
+        eq.fincaId = targetFinca.id;
+        eq.fincaNombre = targetFinca.nombre;
+      }
+
+      renderBoard();
+      showToast(`✅ ${eq.codigo} reasignado a ${targetLabor.nombre}`);
+
+      // Persist to Backend / Airtable
+      persistUpdateToAirtable(eq, newLaborId, newFincaId);
+    }
+
+    async function persistUpdateToAirtable(eq, laborId, fincaId) {
+      if (syncMode === 'offline') {
+        console.log('[Offline] Reasignación guardada en memoria local:', eq.codigo, '->', laborId);
+        return;
+      }
+
+      try {
+        if (syncMode === 'n8n' && webhookUrl) {
+          const res = await fetch(webhookUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              equipoId: eq.id,
+              codigo: eq.codigo,
+              laborId: laborId === 'sin_labor' ? null : laborId,
+              fincaId: fincaId || eq.fincaId,
+              timestamp: new Date().toISOString()
+            })
+          });
+          if (!res.ok) throw new Error('Respuesta HTTP ' + res.status);
+          console.log('[n8n Webhook] Éxito:', eq.codigo);
+        } else if (syncMode === 'airtable' && patToken) {
+          const fields = {};
+          if (laborId !== 'sin_labor') fields['Labor Agrícola'] = [laborId];
+          else fields['Labor Agrícola'] = [];
+          if (fincaId) fields['Finca'] = [fincaId];
+
+          const res = await fetch(`https://api.airtable.com/v0/appAAXTzqCsQh7aYr/tbl7hQ8hoMKbpu1cW/${eq.id}`, {
+            method: 'PATCH',
+            headers: {
+              'Authorization': `Bearer ${patToken}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ fields })
+          });
+          if (!res.ok) throw new Error('Airtable API error ' + res.status);
+          console.log('[Airtable API] Actualizado en vivo:', eq.codigo);
+        }
+      } catch (err) {
+        console.error('Error guardando en servidor:', err);
+        showToast('⚠️ No se pudo sincronizar con Airtable: ' + err.message, 'error');
+      }
+    }
+
+    // Modal Details
+    window.openEquipmentModal = function(equipId) {
+      const eq = currentEquipos.find(e => e.id === equipId);
+      if (!eq) return;
+
+      selectedEquipment = eq;
+      modalCode.textContent = eq.codigo;
+      modalType.innerHTML = (TYPE_ICONS[eq.tipo] || '🚜') + ' ' + (eq.tipo || 'Sin tipo');
+      modalLed.className = 'status-led ' + (eq.disponibilidad === 'Disponible' ? 'led-online' : 'led-offline');
+      modalBrandModel.textContent = (eq.marca + ' ' + eq.modelo).trim() || 'Sin especificar';
+      modalDispStatus.textContent = eq.disponibilidad;
+      modalDispStatus.style.color = eq.disponibilidad === 'Disponible' ? '#34d399' : '#f87171';
+      modalFinca.textContent = eq.fincaNombre;
+      modalHorometro.textContent = eq.horometro ? Math.round(eq.horometro).toLocaleString() + ' ' + eq.medidor : 'Sin dato';
+      modalLaborCurrent.textContent = eq.laborNombre || 'Sin Labor';
+
+      modalAirtableLink.href = `https://airtable.com/appAAXTzqCsQh7aYr/tbl7hQ8hoMKbpu1cW/viwMau5JoqVt4pZUB/${eq.id}`;
+
+      // Fill labors select
+      modalLaborSelect.innerHTML = LABORES.map(l => `
+        <option value="${l.id}" ${l.id === eq.laborId ? 'selected' : ''}>${l.icon} ${l.nombre}</option>
+      `).join('') + `<option value="sin_labor" ${!eq.laborId || eq.laborId === 'sin_labor' ? 'selected' : ''}>❓ Sin Labor</option>`;
+
+      // Fill fincas select
+      modalFincaSelect.innerHTML = FINCAS.map(f => `
+        <option value="${f.id}" ${f.id === eq.fincaId ? 'selected' : ''}>${f.nombre}</option>
+      `).join('');
+
+      equipmentModal.classList.add('active');
+    };
+
+    // KPI Summary
+    function updateKPISummary() {
+      const total = currentEquipos.length;
+      const dispCount = currentEquipos.filter(e => e.disponibilidad === 'Disponible').length;
+      const noDispCount = total - dispCount;
+      const rate = total > 0 ? ((dispCount / total) * 100).toFixed(1) : 100;
+
+      document.getElementById('kpi-total-fleet').textContent = total;
+      document.getElementById('kpi-disp-rate').textContent = rate + '%';
+      document.getElementById('kpi-active-count').textContent = dispCount;
+      document.getElementById('kpi-maintenance-count').textContent = noDispCount;
+
+      // Update finca counts
+      document.getElementById('cnt-finca-all').textContent = total;
+      FINCAS.forEach(f => {
+        const c = currentEquipos.filter(e => e.fincaId === f.id).length;
+        if (f.nombre.includes('Santa Rosa')) document.getElementById('cnt-finca-sr').textContent = c;
+        else if (f.nombre.includes('Rio Cuarto')) document.getElementById('cnt-finca-rc').textContent = c;
+        else if (f.nombre.includes('El Parque')) document.getElementById('cnt-finca-ep').textContent = c;
+        else if (f.nombre.includes('Piedra')) document.getElementById('cnt-finca-pa').textContent = c;
+      });
+    }
+
+    // Toast
+    function showToast(msg, type = 'success') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = 'toast ' + (type === 'error' ? 'toast-error' : 'toast-success');
+      toast.textContent = msg;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(10px)';
+        toast.style.transition = 'all 0.3s ease';
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
+    }
+
+    // Start
+    init();
+  </script>
+</body>
+</html>
